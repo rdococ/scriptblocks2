@@ -64,7 +64,7 @@ sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 		arguments = {"left", "right"},
 		continuation = "front",
 		action = function (pos, node, process, frame, channel, message)
-			digilines.receptor_send(sb2.getHead(frame), digilines.rules.default, channel, message)
+			digilines.receptor_send(sb2.getHead(frame), digilines.rules.default, channel, sb2.toLuaValue(message))
 		end
 	},
 })

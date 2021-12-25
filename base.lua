@@ -152,16 +152,16 @@ function sb2.toSB2Value(value, record)
 end
 function sb2.toLuaValue(value, record)
 	if type(value) ~= "table" then return value end
-	record = record or {}
 	
-	if record[value] then return record[value] end
+	record = record or {}
+	if record[value] ~= nil then return record[value] end
 	
 	if value.type == "list" then
 		local newv = {}
 		record[value] = newv
 		
-		for i, item in pairs(value.items) do
-			newv[i] = item
+		for i, v in pairs(value.items) do
+			newv[i] = sb2.toLuaValue(v, record)
 		end
 		
 		return newv
@@ -169,8 +169,8 @@ function sb2.toLuaValue(value, record)
 		local newv = {}
 		record[value] = newv
 		
-		for k, entry in pairs(value.entries) do
-			newv[k] = entry
+		for k, v in pairs(value.entries) do
+			newv[sb2.toLuaValue(k, record)] = sb2.toLuaValue(v, record)
 		end
 		
 		return newv
