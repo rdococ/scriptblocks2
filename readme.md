@@ -17,8 +17,8 @@ This mod is an experiment to see what kind of fully-fledged programming language
 
 This procedure calculates the factorial of a given number.
 
-![Factorial](factorial.png)
+![Factorial](screenshots/factorial.png)
 
 This procedure takes a list and a closure. It calls the closure for each item in the list, and reports the results in a new list.
 
-![Map](map.png)
+![Map](screenshots/map.png)
