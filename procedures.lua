@@ -116,6 +116,7 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		local procDef = sb2.procedures[procedure]
 		if not vector.equals(pos, procDef.pos) then
 			procDef.pos = pos
+			sb2.log("action", "Updated procedure %s position at %s", procedure, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated procedure position.")
 		end
 		if procDef.owner ~= owner then

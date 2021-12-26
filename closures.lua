@@ -76,6 +76,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			return
 		end
 		
+		sb2.log("action", "Closure %s created at %s", id, minetest.pos_to_string(pos))
+		
 		meta:set_string("id", id)
 		sb2.functions[id] = {closurePos = pos, startPos = vector.add(pos, dirs.right)}
 	end,
@@ -86,9 +88,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local id = meta:get_string("id")
 		
 		if id == "" then return end
-		if not sb2.functions[id] then return end
 		
-		sb2.functions[id].startPos = vector.add(pos, dirs.right)
+		local funcDef = sb2.functions[id]
+		if not funcDef then return end
+		
+		sb2.log("action", "Closure %s rotated at %s", id, minetest.pos_to_string(pos))
+		
+		funcDef.startPos = vector.add(pos, dirs.right)
 	end,
 	on_destruct = function (pos)
 		local node = minetest.get_node(pos)
@@ -100,8 +106,11 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if id == "" then return end
 		
 		local funcDef = sb2.functions[id]
+		if not funcDef then return end
 		
-		if funcDef and vector.equals(pos, funcDef.closurePos) then
+		sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
+		
+		if vector.equals(pos, funcDef.closurePos) then
 			sb2.functions[id] = nil
 		end
 	end,
@@ -119,13 +128,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if id == "" then return end
 		
 		local funcDef = sb2.functions[id]
-		
 		if not funcDef then return end
 		
 		local startPos = vector.add(pos, dirs.right)
 		if not vector.equals(pos, funcDef.closurePos) or not vector.equals(startPos, funcDef.startPos) then
 			funcDef.closurePos = pos
 			funcDef.startPos = startPos
+			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated closure position.")
 		end
 	end,

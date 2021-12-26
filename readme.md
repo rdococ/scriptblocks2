@@ -5,7 +5,7 @@ Scriptblocks2 is a Minetest mod and toy programming language using nodes called 
 
 Features:
 
-- Input slots rather than a register-based mechanism.
+- Support for nested expressions.
 - Lexically scoped variables.
 - Custom, named procedures with up to 2 named parameters.
 - First-class lists, dictionaries and functions with up to 1 named parameter.
