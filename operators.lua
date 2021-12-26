@@ -1,6 +1,6 @@
 sb2.colors.numbers = "#10e81e"
 sb2.colors.strings = "#c3e51b"
-sb2.colors.booleans = "#3fba3d"
+sb2.colors.booleans = "#04d349"
 
 sb2.registerScriptblock("scriptblocks2:add", {
 	sb2_label = "Add",

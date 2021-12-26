@@ -112,7 +112,7 @@ function sb2.toSB2Value(value, record)
 	record[value] = dict
 	
 	for k, v in pairs(value) do
-		dict:setEntry(k, sb2.toSB2Value(v, record))
+		dict:setEntry(sb2.toSB2Value(k, record), sb2.toSB2Value(v, record))
 	end
 	
 	return dict
