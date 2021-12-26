@@ -7,18 +7,18 @@ sb2.registerScriptblock("scriptblocks2:if", {
 	sb2_icon = "sb2_icon_if.png",
 	sb2_slotted_faces = {"right", "front", "left"},
 	
-	sb2_action = function (pos, node, process, frame)
+	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
-		if not sb2.isArgEvaluated(frame, "condition") then
-			sb2.selectArg(frame, "condition")
-			return sb2.pushFrame(process, sb2.createFrame(vector.add(pos, dirs.right), frame))
+		if not frame:isArgEvaluated("condition") then
+			frame:selectArg("condition")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		
-		if sb2.getArg(frame, "condition") then
-			return sb2.replaceFrame(process, sb2.createFrame(vector.add(pos, dirs.front), frame))
+		if frame:getArg("condition") then
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		else
-			return sb2.replaceFrame(process, sb2.createFrame(vector.add(pos, dirs.left), frame))
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.left), context))
 		end
 	end
 })
@@ -30,18 +30,18 @@ sb2.registerScriptblock("scriptblocks2:wait", {
 	sb2_icon = "sb2_icon_wait.png",
 	sb2_slotted_faces = {"right", "front"},
 	
-	sb2_action = function (pos, node, process, frame)
+	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		local t = minetest.get_server_uptime()
 		
-		if not sb2.isArgEvaluated(frame, "duration") then
-			sb2.setArg(frame, "start", t)
-			sb2.selectArg(frame, "duration")
-			return sb2.pushFrame(process, sb2.createFrame(vector.add(pos, dirs.right), frame))
+		if not frame:isArgEvaluated("duration") then
+			frame:setArg("start", t)
+			frame:selectArg("duration")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		
-		if t - sb2.getArg(frame, "start") >= sb2.toNumber(sb2.getArg(frame, "duration")) then
-			return sb2.replaceFrame(process, sb2.createFrame(vector.add(pos, dirs.front), frame))
+		if t - frame:getArg("start") >= sb2.toNumber(frame:getArg("duration")) then
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		else
 			return "yield"
 		end

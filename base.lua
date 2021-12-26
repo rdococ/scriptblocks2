@@ -1,39 +1,55 @@
 --[[
-	Base
-	
-	This is the base of scriptblocks2. It defines various helper functions for creating vanilla-looking and vanilla-acting scriptblocks, and provides conversion functions between Lua and SB2 values (e.g. lists, dictionaries and closures).
-	
+Base
+
+This is the base of scriptblocks2. It defines various helper functions for creating vanilla-looking and vanilla-acting scriptblocks, and provides conversion functions between Lua and SB2 values (e.g. lists and dictionaries).
+
+Fields:
 	colors
 		A table of colors for each category of scriptblock.
-	
-	makeTiles
-		Takes a base texture, an icon, and an optional list of faces ("top", "right", "front", etc.). It produces a set of tiles with the icon slapped on top of the base texture, and slot images overlayed on the selected faces.
-	single_input_*
-		The 'single_input' functions can be used to create scriptblocks that take a single input from a formspec. This is used for constant values and variable names.
-	registerScriptblock
+
+Functions:
+	makeTiles(color, icon, slots)
+		Takes a color, an icon, and an optional list of faces ("top", "right", "front", etc.). It produces a set of tiles with the icon slapped on top of the base texture, and slot images overlayed on the selected faces.
+	registerScriptblock(name, def)
 		Registers a 'vanilla' scriptblock node, using 'makeTiles' and optionally the 'single_input' mechanism.
-		Any node can be modified to interact with scriptblocks, but this is the main way to do it.
+		Any node can be modified to interact with scriptblocks, but this is the simplest way to do it.
 		
-		sb2_label: A human-readable name for the scriptblock. Suffixed with "Scriptblock" to create the item description.
+		registerScriptblock only:
+			sb2_label
+				A human-readable name for the scriptblock. Suffixed with "Scriptblock" to create the item description.
+			sb2_color
+				The color of the scriptblock.
+			sb2_icon
+				The icon to be overlayed on the top face of the scriptblock.
+			sb2_slotted_faces
+				A list of faces to be overlayed with slots.
+			sb2_input_name, sb2_input_label, sb2_input_default
+				The name of the metadata field used to store the input; the human-readable label for the input; and the input's default value. Automatically creates a formspec allowing users to enter a value for the input, and displays the input value in infotext.
 		
-		sb2_color: The color of the scriptblock.
-		sb2_icon: The icon to be overlayed on the top face of the scriptblock.
-		sb2_slotted_faces: A list of faces to be overlayed with slots.
-	string/number
+		Can be used by any registered node:
+			sb2_action(pos, node, process, frame, context)
+				The function called when this node is evaluated.
+		
+	toString(value, (record))/toNumber(value, (record))
 		Functions to convert values to strings or numbers. Guaranteed never to return nil. Use these instead of tostring and tonumber to follow the typing conventions of the language.
+		'record' is a table of converted values used to prevent recursion.
+	toSB2Value(value, (record))/toLuaValue(value, (record))
+		Functions to convert values from SB2 values to Lua values and vice versa. toSB2Value creates dictionaries and thus depends on dictionaries.lua - digilines.lua needs to convert Lua values to SB2 values, and so also depends on dictionaries.lua. It may be a good idea to move it to a separate file.
+	prettyPrint(value, (record))
+		Equivalent to toString, but wraps actual strings in quotation marks.
 ]]
 
 sb2.colors = {}
 
 function sb2.simple_action(def)
-	return function (pos, node, process, frame)
+	return function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
 		if def.arguments then
 			for i, face in ipairs(def.arguments) do
-				if not sb2.isArgEvaluated(frame, i) then
-					sb2.selectArg(frame, i)
-					return sb2.pushFrame(process, sb2.createFrame(vector.add(pos, type(face) == "string" and dirs[face] or face), frame))
+				if not frame:isArgEvaluated(i) then
+					frame:selectArg(i)
+					return process:push(sb2.Frame:new(vector.add(pos, type(face) == "string" and dirs[face] or face), context))
 				end
 			end
 		end
@@ -41,24 +57,24 @@ function sb2.simple_action(def)
 		if def.continuation then
 			local cont = def.continuation
 			
-			def.action(pos, node, process, frame, unpack(frame.arguments))
+			def.action(pos, node, process, frame, context, unpack(frame:getArguments()))
 			
-			return sb2.replaceFrame(process, sb2.createFrame(vector.add(pos, type(cont) == "string" and dirs[cont] or cont), frame))
+			return process:replace(sb2.Frame:new(vector.add(pos, type(cont) == "string" and dirs[cont] or cont), context))
 		end
 		
-		return sb2.reportValue(process, def.action(pos, node, process, frame, unpack(frame.arguments)))
+		return process:report(def.action(pos, node, process, frame, context, unpack(frame:getArguments())))
 	end
 end
 
 local faceIndexes = {top = 1, bottom = 2, right = 3, left = 4, back = 5, front = 6}
-function sb2.makeTiles(base, icons, slots)
+function sb2.makeTiles(color, icons, slots)
 	if type(icons) == "string" then
 		icons = {icons, "blank.png", "blank.png", "blank.png", "blank.png", "blank.png"}
 	end
 	
 	local tiles = {}
 	for _, icon in ipairs(icons) do
-		table.insert(tiles, "sb2_base.png^[multiply:" .. base .. "^sb2_highlight.png^(" .. icon .. "^[opacity:48)")
+		table.insert(tiles, "sb2_base.png^[multiply:" .. color .. "^sb2_highlight.png^(" .. icon .. "^[opacity:48)")
 	end
 	
 	if slots then
@@ -71,7 +87,40 @@ function sb2.makeTiles(base, icons, slots)
 	return tiles
 end
 
-function sb2.single_input_on_construct(pos)
+function sb2.toString(value, record)
+	if type(value) ~= "table" or not value.recordString then return tostring(value) end
+	if record and record[value] then return "..." end
+	return value:recordString(record or {}) or ""
+end
+function sb2.toNumber(value, record)
+	if type(value) ~= "table" or not value.recordNumber then return tonumber(value) or 0 end
+	if record and record[value] then return 0 end
+	return value:recordNumber(record or {}) or 0
+end
+function sb2.toLuaValue(value, record)
+	if type(value) ~= "table" or not value.recordLuaValue then return value end
+	if record and record[value] then return record[value] end
+	return value:recordLuaValue(record or {})
+end
+function sb2.toSB2Value(value, record)
+	if type(value) ~= "table" then return value end
+	if record and record[value] then return record[value] end
+	
+	local dict = sb2.Dictionary:new()
+	
+	record = record or {}
+	record[value] = dict
+	
+	for k, v in pairs(value) do
+		dict:setEntry(k, sb2.toSB2Value(v, record))
+	end
+end
+function sb2.prettyPrint(value, ...)
+	if type(value) == "string" then return string.format("%q", value) end
+	return sb2.toString(value, ...)
+end
+
+local function inputOnConstruct(pos)
 	local def = minetest.registered_nodes[minetest.get_node(pos).name]
 	
 	local inputName = minetest.formspec_escape(def.sb2_input_name)
@@ -82,7 +131,7 @@ function sb2.single_input_on_construct(pos)
 	meta:set_string(def.sb2_input_name, def.sb2_input_default)
 	meta:set_string("infotext", def.sb2_input_label .. ": " .. string.format("%q", def.sb2_input_default))
 end
-function sb2.single_input_on_receive_fields(pos, formname, fields, sender)
+local function inputOnReceiveFields(pos, formname, fields, sender)
 	local senderName = sender:get_player_name()
 	if minetest.is_protected(pos, senderName) then minetest.record_protection_violation(pos, senderName); return end
 	
@@ -96,85 +145,6 @@ function sb2.single_input_on_receive_fields(pos, formname, fields, sender)
 	
 	meta:set_string(def.sb2_input_name, newInput)
 	meta:set_string("infotext", def.sb2_input_label .. ": " .. string.format("%q", newInput))
-end
-
-function sb2.toString(value, record)
-	if type(value) ~= "table" then
-		return tostring(value) or ""
-	end
-	
-	record = record or {}
-	if record[value] then return "..." end
-	
-	record[value] = true
-	
-	if value.type == "list" then
-		local elements = {}
-		
-		for index = 1, sb2.getListLength(value) do
-			table.insert(elements, sb2.prettyPrint(sb2.getListItem(value, index), record))
-		end
-		
-		return "[" .. table.concat(elements, ", ") .. "]"
-	elseif value.type == "dictionary" then
-		return "<dictionary>"
-	elseif value.type == "closure" then
-		return "<closure>"
-	end
-	
-	return tostring(value) or ""
-end
-function sb2.toNumber(value)
-	return tonumber(value) or 0
-end
-function sb2.prettyPrint(value, record)
-	if type(value) == "string" then
-		return string.format("%q", value)
-	end
-	return sb2.toString(value, record)
-end
-function sb2.toSB2Value(value, record)
-	if type(value) ~= "table" then return value end
-	
-	record = record or {}
-	if record[value] then return record[value] end
-	
-	local entries = {}
-	local dict = {type = "dictionary", entries = entries}
-	
-	record[value] = dict
-	
-	for k, v in pairs(value) do
-		entries[sb2.toSB2Value(k, record)] = sb2.toSB2Value(v, record)
-	end
-	
-	return dict
-end
-function sb2.toLuaValue(value, record)
-	if type(value) ~= "table" then return value end
-	
-	record = record or {}
-	if record[value] ~= nil then return record[value] end
-	
-	if value.type == "list" then
-		local newv = {}
-		record[value] = newv
-		
-		for i, v in pairs(value.items) do
-			newv[i] = sb2.toLuaValue(v, record)
-		end
-		
-		return newv
-	elseif value.type == "dictionary" then
-		local newv = {}
-		record[value] = newv
-		
-		for k, v in pairs(value.entries) do
-			newv[sb2.toLuaValue(k, record)] = sb2.toLuaValue(v, record)
-		end
-		
-		return newv
-	end
 end
 
 local defaultGroups = {oddly_breakable_by_hand = 1}
@@ -193,12 +163,12 @@ function sb2.registerScriptblock(id, def)
 	if def.sb2_input_name then
 		local old_on_construct = def.on_construct or function () end
 		def.on_construct = function (...)
-			sb2.single_input_on_construct(...)
+			inputOnConstruct(...)
 			return old_on_construct(...)
 		end
 		local old_on_receive_fields = def.on_receive_fields or function () end
 		def.on_receive_fields = function (...)
-			sb2.single_input_on_receive_fields(...)
+			inputOnReceiveFields(...)
 			return old_on_receive_fields(...)
 		end
 	end
@@ -217,7 +187,7 @@ function sb2.registerScriptblock(id, def)
 	end
 end
 
--- Tools
+
 minetest.register_tool("scriptblocks2:runner", {
 	description = "Scriptblock Runner",
 	
@@ -230,9 +200,10 @@ minetest.register_tool("scriptblocks2:runner", {
 		local pos = pointed_thing.under
 		if minetest.is_protected(pos, name) then return end
 		
-		sb2.createProcess(sb2.createFrame(pos, nil, name))
+		sb2.Process:new(sb2.Frame:new(pos, sb2.Context:new(pos, name)))
 	end
 })
+
 if unified_inventory then
 	unified_inventory.add_category_item("scriptblocks2", "scriptblocks2:runner")
 	unified_inventory.register_category("scriptblocks2", {

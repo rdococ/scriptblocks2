@@ -12,7 +12,7 @@ sb2.registerScriptblock("scriptblocks2:string_constant", {
 	sb2_input_default = "",
 	
 	sb2_action = sb2.simple_action {
-		action = function (pos, node, process, frame)
+		action = function (pos, node, process, frame, context)
 			return minetest.get_meta(pos):get_string("value")
 		end
 	}
@@ -29,7 +29,7 @@ sb2.registerScriptblock("scriptblocks2:number_constant", {
 	sb2_input_default = "",
 	
 	sb2_action = sb2.simple_action {
-		action = function (pos, node, process, frame)
+		action = function (pos, node, process, frame, context)
 			return sb2.toNumber(minetest.get_meta(pos):get_string("value"))
 		end
 	}
@@ -44,6 +44,6 @@ sb2.registerScriptblock("scriptblocks2:identity", {
 	
 	sb2_action = sb2.simple_action {
 		continuation = "right",
-		action = function (pos, node, process, frame) end
+		action = function (pos, node, process, frame, context) end
 	}
 })

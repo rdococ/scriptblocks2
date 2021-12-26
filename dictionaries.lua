@@ -1,18 +1,28 @@
 sb2.colors.dictionaries = "#40e5c1"
 
-function sb2.asDictionaryOrNil(v)
-	if type(v) ~= "table" then return end
-	if v.type ~= "dictionary" then return end
-	return v
+sb2.Dictionary = class.register("dictionary")
+
+function sb2.Dictionary:initialize()
+	self.entries = {}
 end
-function sb2.createDictionary()
-	return {type = "dictionary", entries = {}}
+function sb2.Dictionary:getEntry(dict, index)
+	return self.entries[index]
 end
-function sb2.getDictionaryEntry(dict, index)
-	return dict.entries[index]
-end
-function sb2.setDictionaryEntry(dict, index, value)
+function sb2.Dictionary:setEntry(dict, index, value)
 	dict.entries[index] = value
+end
+function sb2.Dictionary:recordString(record)
+	return "<dictionary>"
+end
+function sb2.Dictionary:recordLuaValue(record)
+	local tbl = {}
+	record[self] = tbl
+	
+	for k, v in pairs(self.entries) do
+		tbl[sb2.toLuaValue(k, record)] = sb2.toLuaValue(v, record)
+	end
+	
+	return tbl
 end
 
 sb2.registerScriptblock("scriptblocks2:create_empty_dictionary", {
@@ -23,8 +33,8 @@ sb2.registerScriptblock("scriptblocks2:create_empty_dictionary", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {},
-		action = function (pos, node, process, frame)
-			return sb2.createDictionary()
+		action = function (pos, node, process, frame, context)
+			return sb2.Dictionary:new()
 		end
 	}
 })
@@ -43,16 +53,18 @@ sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 	sb2_action = sb2.simple_action {
 		arguments = {"left", "right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, index, value)
+		action = function (pos, node, process, frame, context, index, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local dict = var and sb2.asDictionaryOrNil(var.value)
+			local dict = var and var.value
+			
 			if not dict then return end
+			if not dict.setEntry then return end
 			
 			if index == nil then return end
 			
-			sb2.setDictionaryEntry(dict, index, value)
+			dict:setEntry(index, value)
 		end
 	}
 })
@@ -69,16 +81,18 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
-		action = function (pos, node, process, frame, index)
+		action = function (pos, node, process, frame, context, index)
 			local varname = minetest.get_meta(pos):get_string("varname")
 			local var = sb2.getVar(frame, varname)
 			
-			local dict = var and sb2.asDictionaryOrNil(var.value)
+			local dict = var and var.value
+			
 			if not dict then return end
+			if not dict.setEntry then return end
 			
 			if index == nil then return end
 			
-			return sb2.getDictionaryEntry(dict, index)
+			return dict:getEntry(index)
 		end
 	}
 })

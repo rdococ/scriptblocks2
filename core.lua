@@ -5,81 +5,70 @@
 	and is also responsible for stepping through each process on each globalstep.
 ]]
 
---[[
-	Processes
-	
-	Processes are active threads running scriptblocks2 programs.
-	Each process manages a spaghetti stack of frames. The top frame in each process is executed every globalstep.
-	
-	frame
-		The current evaluation frame; what the process is going to evaluate in the next step.
-	queue
-		A queue of events this process has received and not yet handled.
-	
-	pushFrame
-		Pushes a new frame to the stack to evaluate it; essentially, asking the process to evaluate something else before coming back.
-	selectArg
-		Allows a frame to select an argument the value should return to.
-	replaceFrame
-		Replaces the current frame with a new one; essentially, a tail recursive evaluation. It's used for 'command' blocks, which are really just special forms that evaluate their continuation last.
-	reportValue
-		Reports a value from the current frame to the parent frame's desired argument, popping it in the process.
-	
-	queueEvent
-		Queues an event onto the given process.
-	handleEvent
-		Finds the first event that satisfies a given criterium, pops and returns it.
-	
-	Currently, at the end of each step, the event queue is cleared.
-]]
-sb2.runningProcesses = {}
 
-function sb2.createProcess(frame, starter)
-	local process = {}
+--[[
+Process
+
+A process is a running instance of a scriptblocks2 program. Processes store their current evaluation frame and an event queue for processing outside events (a mechanism which is still a work in progress).
+
+Methods:
+	push(frame)
+		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
+	replace(frame)
+		Replaces the topmost frame with a new one; i.e. the new frame replaces the current frame completely. This is equivalent to a tail-recursive call.
+	report(value)
+		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	
-	process.frame = frame
-	process.queue = {}
+	queueEvent(event)
+		Queues an event in the process's event queue. Currently, events are unused, and the language model for passing events to processes is yet to be worked out.
+	handleEvent(criteria)
+		Finds, pops and returns the first event that satisfies the given criteria.
 	
-	process.starter = starter
+	step()
+		Performs one execution step. If this method returns "halt", the process is done and dead. If it returns "yield", it is waiting for something else to happen and thus requires no more execution steps until the next Minetest tick.
+]]
+
+sb2.Process = class.register("process")
+sb2.Process.runningProcesses = {}
+
+function sb2.Process:initialize(frame)
+	self.frame = frame
+	self.eventQueue = {}
 	
-	table.insert(sb2.runningProcesses, process)
-	return process
+	sb2.log("action", "Process started at %s", minetest.pos_to_string(frame.pos))
+	
+	table.insert(sb2.Process.runningProcesses, self)
 end
-function sb2.pushFrame(process, frame)
-	frame.parent = process.frame
-	process.frame = frame
+function sb2.Process:push(frame)
+	frame:setParent(self.frame)
+	self.frame = frame
 end
-function sb2.replaceFrame(process, frame)
-	frame.parent = process.frame.parent
-	process.frame = frame
+function sb2.Process:replace(frame)
+	frame:setParent(self.frame:getParent())
+	self.frame = frame
 end
-function sb2.reportValue(process, value)
-	local frame = process.frame
-	
-	if frame.parent then
-		local parent = frame.parent
-		parent.arguments[parent.argument] = value
-		parent.argsEvaluated[parent.argument] = true
+function sb2.Process:report(value)
+	local parent = self.frame:getParent()
+	if parent then
+		parent:receiveArg(value)
+	else
+		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame.pos), tostring(value))
 	end
-	
-	process.frame = frame.parent
+	self.frame = parent
 end
-function sb2.getStarter()
-	return process.starter
+function sb2.Process:queueEvent(event)
+	table.insert(self.eventQueue, event)
 end
-function sb2.queueEvent(process, event)
-	table.insert(process.queue, event)
-end
-function sb2.handleEvent(process, criteria)
-	for i, event in ipairs(process.queue) do
+function sb2.Process:handleEvent(criteria)
+	for i, event in ipairs(self.eventQueue) do
 		if criteria(event) then
-			table.remove(process.queue, i)
+			table.remove(self.eventQueue, i)
 			return event
 		end
 	end
 end
-function sb2.stepProcess(process)
-	local oldFrame = process.frame
+function sb2.Process:step()
+	local oldFrame = self.frame
 	if not oldFrame then return "halt" end
 	
 	local pos = oldFrame.pos
@@ -100,108 +89,147 @@ function sb2.stepProcess(process)
 	
 	local action
 	if def and def.sb2_action then
-		action = def.sb2_action(pos, node, process, oldFrame)
+		action = def.sb2_action(pos, node, self, oldFrame, oldFrame:getContext())
 	else
-		action = sb2.reportValue(process, nil)
+		action = self:report(nil)
 	end
 	
-	for i = 1, #process.queue do
-		table.remove(process.queue, 1)
+	for i = 1, #self.eventQueue do
+		table.remove(self.eventQueue, 1)
 	end
 	
-	if not process.frame or not vector.equals(pos, process.frame.pos) then
+	if not self.frame or not vector.equals(pos, self.frame:getPos()) then
 		minetest.forceload_free_block(pos, true)
-		if process.frame then
-			minetest.forceload_block(process.frame.pos, true)
+		if self.frame then
+			minetest.forceload_block(self.frame:getPos(), true)
 		end
 	end
 	
 	return action
 end
 
+
 --[[
-	Frames
+Frame
+
+A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps, or receive values reported from elsewhere.
+
+Methods:
+	getPos()
+		Returns the position of the node this frame is evaluating.
+	getContext()
+		Returns the context of this evaluation frame. This consists of variables, the top block that began the current procedure, and the player blamed for building the current procedure.
 	
-	Frames are the basic unit of execution. Each frame may have a parent to report to, has an environment of variables, and a position indicating the node currently being executed.
+	getParent()
+		Returns the frame that this frame will eventually report back to.
+	setParent(parent)
+		Sets this frame's parent, causing it to report back to that frame when done.
 	
-	Args are a mechanism that enables a node to schedule other nodes to run, and then do something with the reported value. Use isArgEvaluated to detect if the argument already has a value. Use selectArg to select an argument name to report the value to, and then use pushFrame to push the next frame on.
-	
-	getArg
-		Gets the value of an argument.
-	setArg
-		Sets the value of an argument.
-	isArgEvaluated
-		Checks if the argument has been evaluated.
-	selectArg
-		Selects an argument for a new stack frame to report its value back to.
-	
-	declareVar
-		Defines a variable in this frame's environment.
-	getVar
-		Gets the variable object - you can use .value to set or get its value.
-	
-	getOwner
-		Gets the user that created the stack frame this procedure is in.
-	getPos
-		Gets the position of the node this stack frame is located in.
-	getHead
-		Gets the head position of the stack frame.
-		i.e. The position that started this top-level procedure.
+	getArguments()
+		Returns a table consisting of this frame's evaluated arguments.
+	isArgEvaluated(arg)
+		Returns true if this argument has been evaluated, even if the result was nil.
+	getArg(arg)
+		Gets the value of this argument.
+	setArg(arg, value)
+		Manually sets the value of this argument for temporary storage by the scriptblock. Also marks the argument as evaluated.
+	selectArg(arg)
+		Selects the given argument as the "report destination" for the next frame that this frame pushes onto the process.
+	receiveArg(value)
+		Receives a value, storing it in the selected argument and marking it as evaluated.
 ]]
-function sb2.createFrame(pos, outer, owner, copyEnv)
-	local frame = {}
+
+sb2.Frame = class.register("frame")
+
+function sb2.Frame:initialize(pos, context)
+	self.pos = pos
+	self.context = context
+	self.parent = nil
 	
-	frame.parent = parent
-	
-	frame.pos = pos
-	
-	frame.arguments = {}
-	frame.argsEvaluated = {}
-	frame.argument = nil
-	
-	frame.environment = outer and (copyEnv and sb2.shallowCopy(outer.environment) or outer.environment) or {}
-	frame.owner = owner or (outer and outer.owner or nil)
-	
-	frame.head = outer and outer.head or pos
-	
-	return frame
+	self.arguments = {}
+	self.argsEvaluated = {}
+	self.selectedArg = nil
 end
-function sb2.getArg(frame, argname)
-	return frame.arguments[argname]
+function sb2.Frame:getPos()
+	return self.pos
 end
-function sb2.setArg(frame, argname, value)
-	frame.arguments[argname] = value
+function sb2.Frame:getContext()
+	return self.context
 end
-function sb2.isArgEvaluated(frame, argname)
-	return frame.argsEvaluated[argname]
+function sb2.Frame:getParent()
+	return self.parent
 end
-function sb2.selectArg(frame, argname)
-	frame.argument = argname
+function sb2.Frame:setParent(parent)
+	self.parent = parent
 end
-function sb2.declareVar(frame, name, value)
-	frame.environment[name] = {value = value}
-	return frame.environment[name]
+function sb2.Frame:getArguments()
+	return self.arguments
 end
-function sb2.getVar(frame, name)
-	return frame.environment[name]
+function sb2.Frame:isArgEvaluated(arg)
+	return self.argsEvaluated[arg] or false
 end
-function sb2.getOwner(frame)
-	return frame.owner
+function sb2.Frame:getArg(arg)
+	return self.arguments[arg]
 end
-function sb2.getPos(frame)
-	return frame.pos
+function sb2.Frame:setArg(arg, value)
+	self.arguments[arg] = value
+	self.argsEvaluated[arg] = true
 end
-function sb2.getHead(frame)
-	return frame.head
+function sb2.Frame:selectArg(arg)
+	self.selectedArg = arg
+end
+function sb2.Frame:receiveArg(value)
+	self.arguments[self.selectedArg] = value
+	self.argsEvaluated[self.selectedArg] = true
 end
 
+
+--[[
+Context
+
+A context is a lexical context within a scriptblocks2 program. Contexts store variables, the head of the current procedure and the player that owns it. Multiple evaluation frames may share the same context, or have separate contexts but share variable objects.
+
+Methods:
+	copy()
+		Copies the context, creating a new context which shares the same variables, head and owner. New variables declared in the original context do not transfer over to the copy, but if an existing variable is mutated, that change will be visible.
+	declareVar(varname, value)
+		Creates a new variable named varname in this context and sets its value.
+	getVar(varname)
+		Gets the variable object referred to by varname in this context. Use .value to set or get its value.
+	getOwner()
+		Gets the player blamed for building the scriptblocks running in this context.
+]]
+
+sb2.Context = class.register("context")
+
+function sb2.Context:initialize(head, owner)
+	self.variables = {}
+	self.head = head
+	self.owner = owner
+end
+function sb2.Context:copy()
+	local copy = self:getClass():new(self.owner)
+	copy.variables = sb2.shallowCopy(self.variables)
+	return copy
+end
+function sb2.Context:declareVar(varname, value)
+	self.variables[varname] = {value = value}
+end
+function sb2.Context:getVar(varname)
+	return self.variables[varname]
+end
+function sb2.Context:getOwner()
+	return self.owner
+end
+
+
 minetest.register_globalstep(function ()
-	local processes = sb2.runningProcesses
+	local processes = sb2.Process.runningProcesses
 	local numProcesses = #processes
 	
 	for i, process in pairs(processes) do
 		for _ = 1, math.max(1000 / numProcesses, 1) do
-			local action = sb2.stepProcess(process)
+			local action = process:step()
 			if action == "halt" then
 				processes[i] = nil
 				break

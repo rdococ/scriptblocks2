@@ -11,10 +11,10 @@ sb2.registerScriptblock("scriptblocks2:say", {
 		arguments = {"right"},
 		continuation = "front",
 		
-		action = function (pos, node, process, frame, message)
+		action = function (pos, node, process, frame, context, message)
 			message = sb2.toString(message)
 			
-			local owner = sb2.getOwner(frame)
+			local owner = context:getOwner()
 			if owner then
 				minetest.chat_send_player(owner, "[Process] " .. message)
 			end

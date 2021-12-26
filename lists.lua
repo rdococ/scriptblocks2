@@ -1,35 +1,54 @@
 sb2.colors.lists = "#ce421e"
 
-function sb2.asListOrNil(v)
-	if type(v) ~= "table" then return end
-	if v.type ~= "list" then return end
-	return v
+sb2.List = class.register("list")
+
+function sb2.List:initialize()
+	self.items = {}
 end
-function sb2.createList()
-	return {type = "list", items = {}}
+function sb2.List:getLength()
+	return #self.items
 end
-function sb2.getListLength(list)
-	return #list.items
+function sb2.List:getItem(index)
+	return self.items[index]
 end
-function sb2.getListItem(list, index)
-	return list.items[index]
+function sb2.List:setItem(index, value)
+	self.items[index] = value
 end
-function sb2.setListItem(list, index, value)
-	list.items[index] = value
+function sb2.List:insertItem(index, value)
+	table.insert(self.items, index, value)
 end
-function sb2.insertListItem(list, index, value)
-	table.insert(list.items, index, value)
+function sb2.List:removeItem(index)
+	table.remove(self.items, index)
 end
-function sb2.removeListItem(list, index)
-	table.remove(list.items, index)
+function sb2.List:appendItem(value)
+	table.insert(self.items, value)
 end
-function sb2.appendListItem(list, value)
-	table.insert(list.items, value)
-end
-function sb2.asListIndexOrNil(list, index)
-	if index < 1 then return end
-	if index > sb2.getListLength(list) then return end
+function sb2.List:asListIndex(index, extendedRange)
+	index = sb2.toNumber(index)
+	if index < 0.5 then return end
+	if index >= self:getLength() + (extendedRange and 1.5 or 0.5) then return end
 	return math.ceil(index - 0.5)
+end
+function sb2.List:recordString(record)
+	record[self] = true
+	
+	local elements = {}
+	
+	for k, v in ipairs(self.items) do
+		elements[k] = sb2.prettyPrint(v, record)
+	end
+	
+	return string.format("[%s]", table.concat(elements, ", "))
+end
+function sb2.List:recordLuaValue(record)
+	local tbl = {}
+	record[self] = tbl
+	
+	for k, v in ipairs(self.items) do
+		tbl[k] = sb2.toLuaValue(v, record)
+	end
+	
+	return tbl
 end
 
 sb2.registerScriptblock("scriptblocks2:create_empty_list", {
@@ -40,8 +59,8 @@ sb2.registerScriptblock("scriptblocks2:create_empty_list", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {},
-		action = function (pos, node, process, frame)
-			return sb2.createList()
+		action = function (pos, node, process, frame, context)
+			return sb2.List:new()
 		end
 	}
 })
@@ -60,14 +79,16 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, item)
+		action = function (pos, node, process, frame, context, item)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			sb2.appendListItem(list, item)
+			if type(list) ~= "table" then return end
+			if not list.appendItem then return end
+			
+			list:appendItem(item)
 		end
 	}
 })
@@ -85,17 +106,20 @@ sb2.registerScriptblock("scriptblocks2:remove_from_list", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, index)
+		action = function (pos, node, process, frame, context, index)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			local index = sb2.asListIndexOrNil(list, sb2.toNumber(index))
+			if type(list) ~= "table" then return end
+			if not list.removeItem then return end
+			if not list.asListIndex then return end
+			
+			local index = list:asListIndex(index)
 			if not index then return end
 			
-			sb2.removeListItem(list, index)
+			list:removeItem(index)
 		end
 	}
 })
@@ -113,17 +137,20 @@ sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 	sb2_action = sb2.simple_action {
 		arguments = {"left", "right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, index, value)
+		action = function (pos, node, process, frame, context, index, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			local index = sb2.asListIndexOrNil(list, sb2.toNumber(index))
+			if type(list) ~= "table" then return end
+			if not list.insertItem then return end
+			if not list.asListIndex then return end
+			
+			local index = list:asListIndex(index, true)
 			if not index then return end
 			
-			sb2.insertListItem(list, index, value)
+			list:insertItem(index, value)
 		end
 	}
 })
@@ -142,17 +169,20 @@ sb2.registerScriptblock("scriptblocks2:set_list_item", {
 	sb2_action = sb2.simple_action {
 		arguments = {"left", "right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, index, value)
+		action = function (pos, node, process, frame, context, index, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			local index = sb2.asListIndexOrNil(list, sb2.toNumber(index))
+			if type(list) ~= "table" then return end
+			if not list.insertItem then return end
+			if not list.asListIndex then return end
+			
+			local index = list:asListIndex(index)
 			if not index then return end
 			
-			sb2.setListItem(list, index, value)
+			list:setItem(index, value)
 		end
 	}
 })
@@ -169,17 +199,20 @@ sb2.registerScriptblock("scriptblocks2:get_list_item", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
-		action = function (pos, node, process, frame, index)
+		action = function (pos, node, process, frame, context, index)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			local index = sb2.asListIndexOrNil(list, sb2.toNumber(index))
+			if type(list) ~= "table" then return end
+			if not list.getItem then return end
+			if not list.asListIndex then return end
+			
+			local index = list:asListIndex(index)
 			if not index then return end
 			
-			return sb2.getListItem(list, index)
+			return list:getItem(index)
 		end
 	}
 })
@@ -195,14 +228,16 @@ sb2.registerScriptblock("scriptblocks2:get_list_length", {
 	sb2_input_default = "",
 	
 	sb2_action = sb2.simple_action {
-		action = function (pos, node, process, frame)
+		action = function (pos, node, process, frame, context)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
-			local list = var and sb2.asListOrNil(var.value)
-			if not list then return end
+			local list = var and var.value
 			
-			return sb2.getListLength(list)
+			if type(list) ~= "table" then return end
+			if not list.getLength then return end
+			
+			return list:getLength()
 		end
 	}
 })

@@ -70,6 +70,6 @@ function sb2.shallowCopy(tbl)
 	return newTbl
 end
 
-function sb2.log(level, message)
-	minetest.chat_send_all("[" .. level .. "] " .. message)
+function sb2.log(level, message, ...)
+	minetest.log(level, string.format("[Scriptblocks2] " .. message, ...))
 end

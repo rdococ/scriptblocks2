@@ -11,7 +11,7 @@ sb2.registerScriptblock("scriptblocks2:add", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) + sb2.toNumber(b)
 		end
 	}
@@ -25,7 +25,7 @@ sb2.registerScriptblock("scriptblocks2:subtract", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) - sb2.toNumber(b)
 		end
 	}
@@ -39,7 +39,7 @@ sb2.registerScriptblock("scriptblocks2:multiply", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) * sb2.toNumber(b)
 		end
 	}
@@ -53,7 +53,7 @@ sb2.registerScriptblock("scriptblocks2:divide", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) / sb2.toNumber(b)
 		end
 	}
@@ -68,7 +68,7 @@ sb2.registerScriptblock("scriptblocks2:less_than", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) < sb2.toNumber(b)
 		end
 	}
@@ -82,7 +82,7 @@ sb2.registerScriptblock("scriptblocks2:equals", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return a == b
 		end
 	}
@@ -96,7 +96,7 @@ sb2.registerScriptblock("scriptblocks2:greater_than", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toNumber(a) > sb2.toNumber(b)
 		end
 	}
@@ -111,7 +111,7 @@ sb2.registerScriptblock("scriptblocks2:join", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return sb2.toString(a) .. sb2.toString(b)
 		end
 	}
@@ -125,7 +125,7 @@ sb2.registerScriptblock("scriptblocks2:get_letter", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, ind, str)
+		action = function (pos, node, process, frame, context, ind, str)
 			str = sb2.toString(str)
 			ind = sb2.toNumber(ind)
 			if ind < 1 or ind > str:len() then
@@ -145,7 +145,7 @@ sb2.registerScriptblock("scriptblocks2:get_string_length", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
-		action = function (pos, node, process, frame, str)
+		action = function (pos, node, process, frame, context, str)
 			return sb2.toString(str):len()
 		end
 	}
@@ -160,7 +160,7 @@ sb2.registerScriptblock("scriptblocks2:not", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
-		action = function (pos, node, process, frame, a)
+		action = function (pos, node, process, frame, context, a)
 			return not a
 		end
 	}
@@ -174,7 +174,7 @@ sb2.registerScriptblock("scriptblocks2:and", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return a and b
 		end
 	}
@@ -188,7 +188,7 @@ sb2.registerScriptblock("scriptblocks2:or", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, a, b)
+		action = function (pos, node, process, frame, context, a, b)
 			return a or b
 		end
 	}

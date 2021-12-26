@@ -15,9 +15,9 @@ sb2.registerScriptblock("scriptblocks2:declare_variable", {
 		arguments = {"right"},
 		continuation = "front",
 		
-		action = function (pos, node, process, frame, value)
+		action = function (pos, node, process, frame, context, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			sb2.declareVar(frame, varname).value = value
+			context:declareVar(varname, value)
 		end
 	}
 })
@@ -37,9 +37,9 @@ sb2.registerScriptblock("scriptblocks2:set_variable", {
 		arguments = {"right"},
 		continuation = "front",
 		
-		action = function (pos, node, process, frame, value)
+		action = function (pos, node, process, frame, context, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			if var then
 				var.value = value
 			end
@@ -59,9 +59,9 @@ sb2.registerScriptblock("scriptblocks2:get_variable", {
 	
 	sb2_action = sb2.simple_action {
 		arguments = {},
-		action = function (pos, node, process, frame)
+		action = function (pos, node, process, frame, context)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			return var and var.value or nil
 		end
 	}

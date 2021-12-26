@@ -10,7 +10,7 @@ sb2.registerScriptblock("scriptblocks2:receive_mesecon_signal", {
 	
 	sb2_action = sb2.simple_action {
 		continuation = "front",
-		action = function (pos, node, process, frame) end
+		action = function (pos, node, process, frame, context) end
 	},
 	
 	after_place_node = function (pos, placer, itemstack, pointed_thing)
@@ -27,7 +27,8 @@ sb2.registerScriptblock("scriptblocks2:receive_mesecon_signal", {
 	mesecons = {
 		effector = {
 			action_on = function (pos, node)
-				sb2.createProcess(sb2.createFrame(pos, nil, minetest.get_meta(pos):get_string("owner")))
+				local context = sb2.Context:new(pos, minetest.get_meta(pos):get_string("owner"))
+				sb2.Process:new(sb2.Frame:new(pos, context))
 			end,
 			rules = mesecon.rules.alldirs,
 		},

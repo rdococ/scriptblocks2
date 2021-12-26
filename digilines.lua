@@ -13,7 +13,7 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 	
 	sb2_action = sb2.simple_action {
 		continuation = "front",
-		action = function (pos, node, process, frame) end
+		action = function (pos, node, process, frame, context) end
 	},
 	
 	after_place_node = function (pos, placer, itemstack, pointed_thing)
@@ -44,10 +44,10 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 				local setchan = meta:get_string("channel")
 				
 				if channel == setchan then
-					local frame = sb2.createFrame(pos, nil, meta:get_string("owner"))
-					sb2.declareVar(frame, "message", sb2.toSB2Value(message))
+					local context = sb2.Context:new(pos, meta:get_string("owner"))
+					context:declareVar("message", sb2.toSB2Value(message))
 					
-					sb2.createProcess(frame)
+					sb2.Process:new(sb2.Frame:new(pos, context))
 				end
 			end
 		}
@@ -63,8 +63,8 @@ sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 	sb2_action = sb2.simple_action {
 		arguments = {"left", "right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, channel, message)
-			digilines.receptor_send(sb2.getHead(frame), digilines.rules.default, channel, sb2.toLuaValue(message))
+		action = function (pos, node, process, frame, context, channel, message)
+			digilines.receptor_send(context:getHead(), digilines.rules.default, channel, sb2.toLuaValue(message))
 		end
 	},
 })
