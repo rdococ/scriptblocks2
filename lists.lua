@@ -221,7 +221,7 @@ sb2.registerScriptblock("scriptblocks2:get_list_length", {
 	sb2_label = "Get List Length",
 	
 	sb2_color = sb2.colors.lists,
-	sb2_icon = "sb2_icon_get_list_length.png",
+	sb2_icon = "sb2_icon_count.png",
 	
 	sb2_input_name = "varname",
 	sb2_input_label = "Variable",
