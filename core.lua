@@ -198,6 +198,8 @@ Methods:
 		Gets the variable object referred to by varname in this context. Use .value to set or get its value.
 	getOwner()
 		Gets the player blamed for building the scriptblocks running in this context.
+	getHead()
+		Gets the initial position of the current context.
 ]]
 
 sb2.Context = class.register("context")
@@ -220,6 +222,9 @@ function sb2.Context:getVar(varname)
 end
 function sb2.Context:getOwner()
 	return self.owner
+end
+function sb2.Context:getHead()
+	return self.head
 end
 
 

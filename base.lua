@@ -114,6 +114,8 @@ function sb2.toSB2Value(value, record)
 	for k, v in pairs(value) do
 		dict:setEntry(k, sb2.toSB2Value(v, record))
 	end
+	
+	return dict
 end
 function sb2.prettyPrint(value, ...)
 	if type(value) == "string" then return string.format("%q", value) end

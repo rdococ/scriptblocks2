@@ -5,14 +5,22 @@ sb2.Dictionary = class.register("dictionary")
 function sb2.Dictionary:initialize()
 	self.entries = {}
 end
-function sb2.Dictionary:getEntry(dict, index)
+function sb2.Dictionary:getEntry(index)
 	return self.entries[index]
 end
-function sb2.Dictionary:setEntry(dict, index, value)
-	dict.entries[index] = value
+function sb2.Dictionary:setEntry(index, value)
+	self.entries[index] = value
 end
 function sb2.Dictionary:recordString(record)
-	return "<dictionary>"
+	record[self] = true
+	
+	local elements = {}
+	
+	for k, v in pairs(self.entries) do
+		table.insert(elements, string.format("%s: %s", sb2.prettyPrint(k, record), sb2.prettyPrint(v, record)))
+	end
+	
+	return string.format("{%s}", table.concat(elements, ", "))
 end
 function sb2.Dictionary:recordLuaValue(record)
 	local tbl = {}
@@ -83,12 +91,12 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 		arguments = {"right"},
 		action = function (pos, node, process, frame, context, index)
 			local varname = minetest.get_meta(pos):get_string("varname")
-			local var = sb2.getVar(frame, varname)
+			local var = context:getVar(varname)
 			
 			local dict = var and var.value
 			
 			if not dict then return end
-			if not dict.setEntry then return end
+			if not dict.getEntry then return end
 			
 			if index == nil then return end
 			
