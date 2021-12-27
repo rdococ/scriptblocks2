@@ -58,7 +58,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			
 			local parameter = itemMeta:get_string("parameter")
 			meta:set_string("parameter", parameter)
-			meta:set_string("infotext", string.format("Parameter: %q", parameter))
+			
 			itemstack:set_count(0)
 		end
 		
@@ -79,6 +79,9 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		sb2.log("action", "Closure %s created at %s", id, minetest.pos_to_string(pos))
 		
 		meta:set_string("id", id)
+		meta:set_string("owner", placerName)
+		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName, meta:get_string("parameter")))
+		
 		sb2.functions[id] = {closurePos = pos, startPos = vector.add(pos, dirs.right)}
 	end,
 	on_rotate = function (pos, node, user, mode, newParam2)
@@ -137,6 +140,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated closure position.")
 		end
+		
+		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", meta:get_string("owner"), meta:get_string("parameter")))
 	end,
 	
 	preserve_metadata = function (pos, oldNode, oldMeta, drops)
@@ -194,6 +199,7 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		local funcMeta = minetest.get_meta(funcPos)
 		
 		local newFrame = closure:createCallFrame()
+		newFrame:getContext():setOwner(funcMeta:get_string("owner"))
 		newFrame:getContext():declareVar(funcMeta:get_string("parameter"), frame:getArg(1))
 		
 		return process:replace(newFrame)
@@ -234,6 +240,7 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local newFrame = closure:createCallFrame()
+			newFrame:getContext():setOwner(funcMeta:get_string("owner"))
 			newFrame:getContext():declareVar(funcMeta:get_string("parameter"), frame:getArg(1))
 			
 			return process:push(newFrame)
