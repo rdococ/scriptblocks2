@@ -88,7 +88,6 @@ function sb2.makeTiles(color, icons, slots)
 	end
 	
 	if slots then
-		local slottedTexture = texture
 		for _, face in ipairs(slots) do
 			tiles[faceIndexes[face]] = tiles[faceIndexes[face]] .. "^sb2_slot.png"
 		end
