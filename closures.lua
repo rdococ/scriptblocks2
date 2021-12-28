@@ -44,7 +44,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		local meta = minetest.get_meta(pos)
 		
-		local id = ""
+		local id
 		
 		local itemMeta = itemstack:get_meta()
 		local itemId = itemMeta:get_string("id")
@@ -63,7 +63,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		end
 		
 		local attempts = 0
-		while sb2.functions[id] and attempts <= 10000 do
+		while (not id or sb2.functions[id]) and attempts <= 10000 do
 			id = sb2.generateUUID()
 			attempts = attempts + 1
 		end
@@ -90,14 +90,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local meta = minetest.get_meta(pos)
 		local id = meta:get_string("id")
 		
-		if id == "" then return end
-		
 		local funcDef = sb2.functions[id]
 		if not funcDef then return end
 		
-		sb2.log("action", "Closure %s rotated at %s", id, minetest.pos_to_string(pos))
-		
-		funcDef.startPos = vector.add(pos, dirs.right)
+		if vector.equals(pos, funcDef.closurePos) then
+			sb2.log("action", "Closure %s rotated at %s", id, minetest.pos_to_string(pos))
+			funcDef.startPos = vector.add(pos, dirs.right)
+		end
 	end,
 	on_destruct = function (pos)
 		local node = minetest.get_node(pos)
@@ -106,14 +105,11 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local meta = minetest.get_meta(pos)
 		local id = meta:get_string("id")
 		
-		if id == "" then return end
-		
 		local funcDef = sb2.functions[id]
 		if not funcDef then return end
 		
-		sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
-		
 		if vector.equals(pos, funcDef.closurePos) then
+			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
 			sb2.functions[id] = nil
 		end
 	end,
