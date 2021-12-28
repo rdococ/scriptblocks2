@@ -64,7 +64,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		local attempts = 0
 		while sb2.functions[id] and attempts <= 10000 do
-			id = ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"):gsub("x", function () local num = math.random(1, 16); return ("0123456789abcdef"):sub(num, num) end)
+			id = sb2.generateUUID()
 			attempts = attempts + 1
 		end
 		

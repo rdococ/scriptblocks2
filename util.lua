@@ -70,6 +70,10 @@ function sb2.shallowCopy(tbl)
 	return newTbl
 end
 
+function sb2.generateUUID()
+	return ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"):gsub("x", function () local num = math.random(1, 16); return ("0123456789abcdef"):sub(num, num) end)
+end
+
 function sb2.log(level, message, ...)
 	minetest.log(level, string.format("[Scriptblocks2] " .. message, ...))
 end
