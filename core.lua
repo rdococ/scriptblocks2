@@ -26,6 +26,10 @@ Methods:
 	
 	step()
 		Performs one execution step. If this method returns "halt", the process is done and dead. If it returns "yield", it is waiting for something else to happen and thus requires no more execution steps until the next Minetest tick.
+
+Node properties:
+	sb2_action(pos, node, process, context, frame)
+		When a scriptblock is evaluated, the process calls this function from the node definition to decide what to do. The function can call any of the methods presented in this file on existing processes, frames or contexts and/or create new frames and contexts. The function may be evaluated multiple times if control returns to the current frame; this is how scriptblocks can can evaluate multiple arguments, perform calculations and report the result.
 ]]
 
 sb2.Process = class.register("process")

@@ -37,6 +37,16 @@ Functions:
 		Functions to convert values from SB2 values to Lua values and vice versa. toSB2Value creates dictionaries and thus depends on dictionaries.lua - digilines.lua needs to convert Lua values to SB2 values, and so also depends on dictionaries.lua. It may be a good idea to move it to a separate file.
 	prettyPrint(value, (record))
 		Equivalent to toString, but wraps actual strings in quotation marks.
+	
+	simple_action(def)
+		Returns a simple sb2_action function that behaves according to specific norms. All simple actions evaluate their arguments before calculating the final result, and either discarding it to evaluate a continuation (a la command blocks) or reporting it (a la reporters).
+		
+		arguments
+			A list of faces that represent the arguments to be evaluated. The order of faces determines the order the arguments are evaluated, and the order they are given in the action function.
+		continuation
+			An optional face, and a sort of pseudo-argument. If absent, the scriptblock acts like a reporter - it will report the value of action(...) to the previous frame. Otherwise, it acts as a command block, evaluating the next block in the sequence.
+		action(pos, node, process, frame, context, ...)
+			Receives the standard arguments you get from sb2_action, plus the results of evaluated arguments. The scriptblock either reports the return value of this function, or discards it and replaces the current frame with a frame to evaluate the continuation.
 ]]
 
 sb2.colors = {}
