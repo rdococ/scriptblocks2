@@ -172,12 +172,22 @@ sb2.registerScriptblock("scriptblocks2:and", {
 	sb2_icon = "sb2_icon_and.png",
 	sb2_slotted_faces = {"right", "front"},
 	
-	sb2_action = sb2.simple_action {
-		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, context, a, b)
-			return a and b
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if not frame:isArgEvaluated(1) then
+			frame:selectArg(1)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
-	}
+		if not frame:isArgEvaluated(2) then
+			if not frame:getArg(1) then return process:report(frame:getArg(1)) end
+			
+			frame:selectArg(2)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
+		
+		return process:report(frame:getArg(2))
+	end,
 })
 sb2.registerScriptblock("scriptblocks2:or", {
 	sb2_label = "Or",
@@ -186,10 +196,20 @@ sb2.registerScriptblock("scriptblocks2:or", {
 	sb2_icon = "sb2_icon_or.png",
 	sb2_slotted_faces = {"right", "front"},
 	
-	sb2_action = sb2.simple_action {
-		arguments = {"right", "front"},
-		action = function (pos, node, process, frame, context, a, b)
-			return a or b
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if not frame:isArgEvaluated(1) then
+			frame:selectArg(1)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
-	}
+		if not frame:isArgEvaluated(2) then
+			if frame:getArg(1) then return process:report(frame:getArg(1)) end
+			
+			frame:selectArg(2)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
+		
+		return process:report(frame:getArg(2))
+	end,
 })
