@@ -1,7 +1,7 @@
-Scriptblocks2
-=============
+Scriptblocks 2
+==============
 
-Scriptblocks2 is a Minetest mod and toy programming language using nodes called scriptblocks. It is something of a spiritual sequel to the original scriptblocks mod, which was lost to the ages.
+Scriptblocks 2 is a Minetest mod and toy programming language using nodes called scriptblocks. It is something of a spiritual sequel to the original scriptblocks mod, which was lost to the ages.
 
 Features:
 
