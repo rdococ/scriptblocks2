@@ -3,7 +3,7 @@ sb2.colors.closures = "#c1c1c1"
 local modStorage = (...).modStorage
 sb2.functions = minetest.deserialize(modStorage:get_string("functions")) or {}
 
-sb2.Closure = class.register("closure")
+sb2.Closure = sb2.registerClass("closure")
 
 function sb2.Closure:initialize(id, context)
 	self.functionId = id

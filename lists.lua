@@ -1,6 +1,6 @@
 sb2.colors.lists = "#ce421e"
 
-sb2.List = class.register("list")
+sb2.List = sb2.registerClass("list")
 
 function sb2.List:initialize()
 	self.items = {}

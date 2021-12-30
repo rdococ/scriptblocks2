@@ -8,7 +8,7 @@
 	class.classes
 		Maps class names to class defs.
 
-	class.register(name, def)
+	sb2.registerClass(name, def)
 		Registers and returns a new class for you to expose in any way you want. Should only be run at load time. 'def' should not be a pre-existing table, as it is modified during registration.
 	
 	TODO: class.serialize(object)
@@ -26,10 +26,6 @@
 	<object>:getClass()
 		Returns the object's class, or nil if it is a plain Lua value.
 ]]
-
-if class then return end
-
-class = {}
 
 local classDefinitions = {}
 local instanceClassNames = {}
@@ -50,7 +46,7 @@ local function getClass(self)
 	return instanceClassNames[self] and classDefinitions[instanceClassNames[self]]
 end
 
-function class.register(name, def)
+function sb2.registerClass(name, def)
 	def = def or {}
 	
 	classDefinitions[name] = def

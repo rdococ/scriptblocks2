@@ -1,6 +1,6 @@
 sb2.colors.dictionaries = "#40e5c1"
 
-sb2.Dictionary = class.register("dictionary")
+sb2.Dictionary = sb2.registerClass("dictionary")
 
 function sb2.Dictionary:initialize()
 	self.entries = {}

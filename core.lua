@@ -32,7 +32,7 @@ Node properties:
 		When a scriptblock is evaluated, the process calls this function from the node definition to decide what to do. The function can call any of the methods presented in this file on existing processes, frames or contexts and/or create new frames and contexts. The function may be evaluated multiple times if control returns to the current frame; this is how scriptblocks can can evaluate multiple arguments, perform calculations and report the result.
 ]]
 
-sb2.Process = class.register("process")
+sb2.Process = sb2.registerClass("process")
 sb2.Process.runningProcesses = {}
 
 function sb2.Process:initialize(frame)
@@ -143,7 +143,7 @@ Methods:
 		Receives a value, storing it in the selected argument and marking it as evaluated.
 ]]
 
-sb2.Frame = class.register("frame")
+sb2.Frame = sb2.registerClass("frame")
 
 function sb2.Frame:initialize(pos, context)
 	self.pos = pos
@@ -208,7 +208,7 @@ Methods:
 		Gets the initial position of the current context.
 ]]
 
-sb2.Context = class.register("context")
+sb2.Context = sb2.registerClass("context")
 
 function sb2.Context:initialize(head, owner)
 	self.variables = {}
