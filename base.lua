@@ -84,7 +84,7 @@ function sb2.makeTiles(color, icons, slots)
 	
 	local tiles = {}
 	for _, icon in ipairs(icons) do
-		table.insert(tiles, "sb2_base.png^[multiply:" .. color .. "^sb2_highlight.png^(" .. icon .. "^[opacity:48)")
+		table.insert(tiles, "sb2_base.png^[multiply:" .. color .. "^sb2_highlight.png^(" .. icon .. "^[opacity:45)")
 	end
 	
 	if slots then
