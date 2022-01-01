@@ -5,6 +5,9 @@
 	and is also responsible for stepping through each process on each globalstep.
 ]]
 
+local settings = minetest.settings
+local maxSteps = settings:get("scriptblocks2_max_steps") or 10000
+local maxMemory = settings:get("scriptblocks2_max_memory") or 100000
 
 --[[
 Process
@@ -39,7 +42,12 @@ function sb2.Process:initialize(frame)
 	self.frame = frame
 	self.eventQueue = {}
 	
-	sb2.log("action", "Process started at %s", minetest.pos_to_string(frame.pos))
+	self.memoryScanner = sb2.RecursiveIterator:new(self)
+	
+	self.memoryUsage = 0
+	self.newMemoryUsage = 0
+	
+	sb2.log("action", "Process started by %s at %s", frame:getContext():getOwner() or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
 	table.insert(sb2.Process.runningProcesses, self)
 end
@@ -56,7 +64,7 @@ function sb2.Process:report(value)
 	if parent then
 		parent:receiveArg(value)
 	else
-		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame.pos), tostring(value))
+		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
 	end
 	self.frame = parent
 end
@@ -106,6 +114,36 @@ function sb2.Process:step()
 		minetest.forceload_free_block(pos, true)
 		if self.frame then
 			minetest.forceload_block(self.frame:getPos(), true)
+		end
+	end
+	
+	local getSize = sb2.getSize
+	
+	if action ~= "halt" then
+		local i = 1
+		if self.memoryScanner:hasNext() then
+			local object = self.memoryScanner:next()
+			local size = getSize(object)
+			
+			self.newMemoryUsage = self.newMemoryUsage + size
+			
+			i = i + 1
+		end
+		if not self.memoryScanner:hasNext() then
+			self.memoryUsage = self.newMemoryUsage
+			
+			self.memoryScanner = sb2.RecursiveIterator:new(self)
+			self.newMemoryUsage = 0
+			
+			if self.memoryUsage > maxMemory then
+				if self.frame then
+					sb2.log("warning", "Process ran out of memory at %s", minetest.pos_to_string(self.frame:getPos()))
+				else
+					sb2.log("warning", "Process ran out of memory somewhere")
+				end
+				
+				return "halt"
+			end
 		end
 	end
 	
@@ -242,7 +280,7 @@ minetest.register_globalstep(function ()
 	local numProcesses = #processes
 	
 	for i, process in pairs(processes) do
-		for _ = 1, math.max(1000 / numProcesses, 1) do
+		for _ = 1, math.max(maxSteps / numProcesses, 1) do
 			local action = process:step()
 			if action == "halt" then
 				processes[i] = nil

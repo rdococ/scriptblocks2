@@ -7,6 +7,7 @@ privateSB2.modStorage = minetest.get_mod_storage()
 
 dofile(MP .. "/util.lua")
 dofile(MP .. "/class.lua")
+dofile(MP .. "/iterators.lua")
 
 dofile(MP .. "/core.lua")
 dofile(MP .. "/base.lua")
