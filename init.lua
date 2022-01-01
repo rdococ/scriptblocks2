@@ -4,9 +4,16 @@ local MP = minetest.get_modpath(minetest.get_current_modname())
 
 local privateSB2 = {}
 privateSB2.modStorage = minetest.get_mod_storage()
+privateSB2.insecureEnvironment = minetest.request_insecure_environment()
+
+if not privateSB2.insecureEnvironment then
+	error("Scriptblocks 2 needs to access the insecure environment, solely for newproxy()")
+end
 
 dofile(MP .. "/util.lua")
 dofile(MP .. "/class.lua")
+
+loadfile(MP .. "/tracking.lua")(privateSB2)
 
 dofile(MP .. "/core.lua")
 dofile(MP .. "/base.lua")

@@ -39,6 +39,12 @@ function sb2.Process:initialize(frame)
 	self.frame = frame
 	self.eventQueue = {}
 	
+	self.tracker = sb2.FootprintTracker:new()
+	self.trackee = sb2.FootprintTrackee:new()
+	
+	self.tracker:trackFootprint(self.trackee)
+	self.trackee:valueChanged(nil, frame)
+	
 	sb2.log("action", "Process started at %s", minetest.pos_to_string(frame.pos))
 	
 	table.insert(sb2.Process.runningProcesses, self)
@@ -46,8 +52,12 @@ end
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)
 	self.frame = frame
+	
+	self.trackee:valueChanged(nil, frame)
 end
 function sb2.Process:replace(frame)
+	self.trackee:valueChanged(self.frame, frame)
+	
 	frame:setParent(self.frame:getParent())
 	self.frame = frame
 end
@@ -58,6 +68,7 @@ function sb2.Process:report(value)
 	else
 		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame.pos), tostring(value))
 	end
+	
 	self.frame = parent
 end
 function sb2.Process:queueEvent(event)
@@ -111,6 +122,15 @@ function sb2.Process:step()
 	
 	return action
 end
+function sb2.Process:recordString(record)
+	return "<process>"
+end
+function sb2.Process:getTrackee()
+	return self.trackee
+end
+function sb2.Process:getTracker()
+	return self.tracker
+end
 
 
 --[[
@@ -153,6 +173,9 @@ function sb2.Frame:initialize(pos, context)
 	self.arguments = {}
 	self.argsEvaluated = {}
 	self.selectedArg = nil
+	
+	self.trackee = sb2.FootprintTrackee:new()
+	self.trackee:valueChanged(nil, context)
 end
 function sb2.Frame:getPos()
 	return self.pos
@@ -176,6 +199,8 @@ function sb2.Frame:getArg(arg)
 	return self.arguments[arg]
 end
 function sb2.Frame:setArg(arg, value)
+	self.trackee:valueChanged(self.arguments[arg], value)
+	
 	self.arguments[arg] = value
 	self.argsEvaluated[arg] = true
 end
@@ -183,8 +208,13 @@ function sb2.Frame:selectArg(arg)
 	self.selectedArg = arg
 end
 function sb2.Frame:receiveArg(value)
-	self.arguments[self.selectedArg] = value
-	self.argsEvaluated[self.selectedArg] = true
+	return self:setArg(self.selectedArg, value)
+end
+function sb2.Frame:recordString(record)
+	return "<frame>"
+end
+function sb2.Frame:getTrackee()
+	return self.trackee
 end
 
 
@@ -214,14 +244,24 @@ function sb2.Context:initialize(head, owner)
 	self.variables = {}
 	self.head = head
 	self.owner = owner
+	
+	self.trackee = sb2.FootprintTrackee:new()
 end
 function sb2.Context:copy()
 	local copy = self:getClass():new(self.head)
 	copy.variables = sb2.shallowCopy(self.variables)
+	
+	for varname, var in pairs(copy.variables) do
+		copy.trackee:valueChanged(nil, var)
+	end
+	
 	return copy
 end
 function sb2.Context:declareVar(varname, value)
-	self.variables[varname] = {value = value}
+	local var = sb2.Variable:new(value)
+	self.trackee:valueChanged(self.variables[varname], var)
+	
+	self.variables[varname] = var
 end
 function sb2.Context:getVar(varname)
 	return self.variables[varname]
@@ -235,7 +275,35 @@ end
 function sb2.Context:getHead()
 	return self.head
 end
+function sb2.Context:recordString(record)
+	return "<context>"
+end
+function sb2.Context:getTrackee()
+	return self.trackee
+end
 
+
+sb2.Variable = sb2.registerClass("variable")
+
+function sb2.Variable:initialize(value)
+	self.value = value
+	self.trackee = sb2.FootprintTrackee:new()
+	
+	self.trackee:valueChanged(nil, value)
+end
+function sb2.Variable:getValue()
+	return self.value
+end
+function sb2.Variable:setValue(value)
+	self.trackee:valueChanged(self.value, value)
+	self.value = value
+end
+function sb2.Variable:recordString(record)
+	return "<variable>"
+end
+function sb2.Variable:getTrackee()
+	return self.trackee
+end
 
 minetest.register_globalstep(function ()
 	local processes = sb2.Process.runningProcesses

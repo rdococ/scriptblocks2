@@ -4,6 +4,8 @@ sb2.List = sb2.registerClass("list")
 
 function sb2.List:initialize()
 	self.items = {}
+	
+	self.trackee = sb2.FootprintTrackee:new()
 end
 function sb2.List:getLength()
 	return #self.items
@@ -12,15 +14,19 @@ function sb2.List:getItem(index)
 	return self.items[index]
 end
 function sb2.List:setItem(index, value)
+	self.trackee:valueChanged(self.items[index], value)
 	self.items[index] = value
 end
 function sb2.List:insertItem(index, value)
+	self.trackee:valueChanged(nil, value)
 	table.insert(self.items, index, value)
 end
 function sb2.List:removeItem(index)
+	self.trackee:valueChanged(value, nil)
 	table.remove(self.items, index)
 end
 function sb2.List:appendItem(value)
+	self.trackee:valueChanged(nil, value)
 	table.insert(self.items, value)
 end
 function sb2.List:asListIndex(index, extendedRange)
@@ -49,6 +55,9 @@ function sb2.List:recordLuaValue(record)
 	end
 	
 	return tbl
+end
+function sb2.List:getTrackee()
+	return self.trackee
 end
 
 sb2.registerScriptblock("scriptblocks2:create_empty_list", {

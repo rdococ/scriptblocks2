@@ -41,7 +41,7 @@ sb2.registerScriptblock("scriptblocks2:set_variable", {
 			local varname = minetest.get_meta(pos):get_string("varname")
 			local var = context:getVar(varname)
 			if var then
-				var.value = value
+				var:setValue(value)
 			end
 		end
 	}
@@ -62,7 +62,7 @@ sb2.registerScriptblock("scriptblocks2:get_variable", {
 		action = function (pos, node, process, frame, context)
 			local varname = minetest.get_meta(pos):get_string("varname")
 			local var = context:getVar(varname)
-			return var and var.value or nil
+			return var and var:getValue() or nil
 		end
 	}
 })

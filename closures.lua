@@ -8,6 +8,9 @@ sb2.Closure = sb2.registerClass("closure")
 function sb2.Closure:initialize(id, context)
 	self.functionId = id
 	self.context = context:copy()
+	
+	self.trackee = sb2.FootprintTrackee:new()
+	self.trackee:valueChanged(nil, self.context)
 end
 function sb2.Closure:getPos()
 	return sb2.functions[self.functionId] and sb2.functions[self.functionId].closurePos
@@ -18,11 +21,14 @@ function sb2.Closure:createCallFrame()
 	
 	return sb2.Frame:new(pos, self.context:copy())
 end
-function sb2.Closure:toStringWithRecord(record)
+function sb2.Closure:recordString(record)
 	return "<closure>"
 end
-function sb2.Closure:toLuaValueWithRecord(record)
+function sb2.Closure:recordLuaValue(record)
 	return
+end
+function sb2.Closure:getTrackee()
+	return self.trackee
 end
 
 sb2.registerScriptblock("scriptblocks2:create_closure", {

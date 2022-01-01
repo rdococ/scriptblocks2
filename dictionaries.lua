@@ -4,11 +4,13 @@ sb2.Dictionary = sb2.registerClass("dictionary")
 
 function sb2.Dictionary:initialize()
 	self.entries = {}
+	self.trackee = sb2.FootprintTrackee:new()
 end
 function sb2.Dictionary:getEntry(index)
 	return self.entries[index]
 end
 function sb2.Dictionary:setEntry(index, value)
+	self.trackee:valueChanged(self.entries[index], value)
 	self.entries[index] = value
 end
 function sb2.Dictionary:recordString(record)
@@ -31,6 +33,9 @@ function sb2.Dictionary:recordLuaValue(record)
 	end
 	
 	return tbl
+end
+function sb2.Dictionary:getTrackee()
+	return self.trackee
 end
 
 sb2.registerScriptblock("scriptblocks2:create_empty_dictionary", {

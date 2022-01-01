@@ -37,3 +37,18 @@ sb2.registerScriptblock("scriptblocks2:get_context_owner", {
 		end
 	}
 })
+
+sb2.registerScriptblock("scriptblocks2:get_process_footprint", {
+	sb2_label = "Get Process Memory Footprint",
+	
+	sb2_color = sb2.colors.fun,
+	sb2_icon  = "sb2_icon_list.png",
+	sb2_slotted_faces = {},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {},
+		action = function (pos, node, process, frame, context)
+			return process:getTracker():getMemoryFootprint()
+		end
+	}
+})
