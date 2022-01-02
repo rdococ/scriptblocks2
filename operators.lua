@@ -58,6 +58,34 @@ sb2.registerScriptblock("scriptblocks2:divide", {
 		end
 	}
 })
+sb2.registerScriptblock("scriptblocks2:modulo", {
+	sb2_label = "Modulo",
+	
+	sb2_color = sb2.colors.numbers,
+	sb2_icon = "sb2_icon_modulo.png",
+	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {"right", "front"},
+		action = function (pos, node, process, frame, context, a, b)
+			return sb2.toNumber(a) % math.abs(sb2.toNumber(b))
+		end
+	}
+})
+sb2.registerScriptblock("scriptblocks2:raise_to_power", {
+	sb2_label = "Raise to Power",
+	
+	sb2_color = sb2.colors.numbers,
+	sb2_icon = "sb2_icon_raise_to_power.png",
+	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {"right", "front"},
+		action = function (pos, node, process, frame, context, a, b)
+			return sb2.toNumber(a) ^ sb2.toNumber(b)
+		end
+	}
+})
 
 sb2.registerScriptblock("scriptblocks2:less_than", {
 	sb2_label = "Less Than",
