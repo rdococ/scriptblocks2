@@ -1,5 +1,4 @@
-# The maximum number of process steps that will be scheduled
-# for any given tick.
+# The maximum number of process steps that will be scheduled per game tick.
 scriptblocks2_max_steps (Maximum number of steps per tick) int 10000 1000 100000
 
 # The maximum amount of memory one process can consume in bytes.

@@ -275,19 +275,24 @@ function sb2.Context:getHead()
 end
 
 
+local i = 1
 minetest.register_globalstep(function ()
 	local processes = sb2.Process.runningProcesses
-	local numProcesses = #processes
 	
-	for i, process in pairs(processes) do
-		for _ = 1, math.max(maxSteps / numProcesses, 1) do
+	while i <= math.min(#processes, maxSteps) do
+		local process = processes[i]
+		for _ = 1, math.max(math.floor(maxSteps / #processes), 1) do
 			local action = process:step()
 			if action == "halt" then
-				processes[i] = nil
+				table.remove(processes, i)
+				i = i - 1
 				break
 			elseif action == "yield" then
 				break
 			end
 		end
+		
+		i = i + 1
 	end
+	if i > #processes then i = 1 end
 end)
