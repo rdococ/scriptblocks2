@@ -182,7 +182,7 @@ function sb2.Process:step()
 					sb2.log("warning", "Process started by %s ran out of memory somewhere", self.starter or "(unknown)")
 				end
 				
-				return process:halt("OutOfMemory")
+				return self:halt("OutOfMemory")
 			end
 		end
 	end
