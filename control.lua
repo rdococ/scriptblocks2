@@ -43,7 +43,7 @@ sb2.registerScriptblock("scriptblocks2:wait", {
 		if t - frame:getArg("start") >= sb2.toNumber(frame:getArg("duration")) then
 			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		else
-			return "yield"
+			return process:yield()
 		end
 	end
 })

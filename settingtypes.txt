@@ -5,3 +5,6 @@ scriptblocks2_max_steps (Maximum number of steps per tick) int 10000 1000 100000
 # Memory estimations take more ticks to perform the higher memory usage goes -
 # processes may be able to exceed this for a time!
 scriptblocks2_max_memory (Maximum memory usage per process) int 100000 10000 1000000
+
+# The maximum number of processes one player can have.
+scriptblocks2_max_processes (Maximum processes per player) int 500 100 10000

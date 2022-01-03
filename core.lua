@@ -8,6 +8,7 @@
 local settings = minetest.settings
 local maxSteps = settings:get("scriptblocks2_max_steps") or 10000
 local maxMemory = settings:get("scriptblocks2_max_memory") or 100000
+local maxProcesses = settings:get("scriptblocks2_max_processes") or 500
 
 --[[
 Process
@@ -28,7 +29,26 @@ Methods:
 		Finds, pops and returns the first event that satisfies the given criteria.
 	
 	step()
-		Performs one execution step. If this method returns "halt", the process is done and dead. If it returns "yield", it is waiting for something else to happen and thus requires no more execution steps until the next Minetest tick.
+		Performs one execution step.
+	
+	halt(reason)
+		Halts this process. The process is still in runningProcesses until the end of the next Minetest tick, and calling step() does nothing. Halting reason can be anything truthy, but generally one of the following:
+			"TooManyProcesses"
+				This process was halted at the start because the player has already reached maxProcesses.
+			"OutOfMemory"
+				This process was halted because it exceeded maxMemory.
+			true
+				This process ended normally without any issues.
+	yield()
+		Causes the current process to yield until the start of the next tick. Processes are normally stepped up to maxSteps times per Minetest tick. A process can yield to signal that it is waiting for some external change that can only occur on the next tick, allowing stepping to end early.
+	
+	isHalted()
+		Returns true if the process has halted, false otherwise.
+	isYielding()
+		Returns true if the process is yielding until the start of the next tick.
+	
+	getHaltingReason()
+		Returns the reason this process has halted, or nil if it hasn't.
 
 Node properties:
 	sb2_action(pos, node, process, context, frame)
@@ -36,9 +56,25 @@ Node properties:
 ]]
 
 sb2.Process = sb2.registerClass("process")
+
 sb2.Process.runningProcesses = {}
+sb2.Process.processCounts = {}
 
 function sb2.Process:initialize(frame)
+	self.starter = frame:getContext():getOwner()
+	if self.starter then
+		local processCounts = sb2.Process.processCounts
+		local processCount = processCounts[self.starter] or 0
+		
+		processCounts[self.starter] = processCount + 1
+		
+		if processCount >= maxProcesses then
+			sb2.log("warning", "Process could not be started by %s (too many processes) at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
+			self:halt("TooManyProcesses")
+			return
+		end
+	end
+	
 	self.frame = frame
 	self.eventQueue = {}
 	
@@ -47,7 +83,10 @@ function sb2.Process:initialize(frame)
 	self.memoryUsage = 0
 	self.newMemoryUsage = 0
 	
-	sb2.log("action", "Process started by %s at %s", frame:getContext():getOwner() or "(unknown)", minetest.pos_to_string(frame:getPos()))
+	self.yielding = false
+	self.halted = false
+	
+	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
 	table.insert(sb2.Process.runningProcesses, self)
 end
@@ -80,8 +119,11 @@ function sb2.Process:handleEvent(criteria)
 	end
 end
 function sb2.Process:step()
+	if self.halted then return end
+	self.yielding = false
+	
 	local oldFrame = self.frame
-	if not oldFrame then return "halt" end
+	if not oldFrame then return self:halt() end
 	
 	local pos = oldFrame.pos
 	
@@ -89,21 +131,19 @@ function sb2.Process:step()
 	local nodename = node.name
 	
 	if nodename == "ignore" then
-		if not minetest.forceload_block(pos, true) then return "yield" end
+		if not minetest.forceload_block(pos, true) then return self:yield() end
 		
 		node = minetest.get_node(pos)
 		nodename = node.name
 		
-		if nodename == "ignore" then return "yield" end
+		if nodename == "ignore" then return self:yield() end
 	end
 	
 	local def = minetest.registered_nodes[nodename]
-	
-	local action
 	if def and def.sb2_action then
-		action = def.sb2_action(pos, node, self, oldFrame, oldFrame:getContext())
+		def.sb2_action(pos, node, self, oldFrame, oldFrame:getContext())
 	else
-		action = self:report(nil)
+		self:report(nil)
 	end
 	
 	for i = 1, #self.eventQueue do
@@ -119,7 +159,7 @@ function sb2.Process:step()
 	
 	local getSize = sb2.getSize
 	
-	if action ~= "halt" then
+	if not self.halted then
 		local i = 1
 		if self.memoryScanner:hasNext() then
 			local object = self.memoryScanner:next()
@@ -137,17 +177,33 @@ function sb2.Process:step()
 			
 			if self.memoryUsage > maxMemory then
 				if self.frame then
-					sb2.log("warning", "Process ran out of memory at %s", minetest.pos_to_string(self.frame:getPos()))
+					sb2.log("warning", "Process started by %s ran out of memory at %s", self.starter or "(unknown)", minetest.pos_to_string(self.frame:getPos()))
 				else
-					sb2.log("warning", "Process ran out of memory somewhere")
+					sb2.log("warning", "Process started by %s ran out of memory somewhere", self.starter or "(unknown)")
 				end
 				
-				return "halt"
+				return process:halt("OutOfMemory")
 			end
 		end
 	end
+end
+function sb2.Process:halt(reason)
+	self.halted = reason or true
+	sb2.Process.processCounts[self.starter] = sb2.Process.processCounts[self.starter] - 1
 	
-	return action
+	sb2.log("action", "Process by %s halted because %s", self.starter or "(unknown)", tostring(self.halted))
+end
+function sb2.Process:yield()
+	self.yielding = true
+end
+function sb2.Process:isHalted()
+	return self.halted and true or false
+end
+function sb2.Process:isYielding()
+	return self.yielding
+end
+function sb2.Process:getHaltingReason()
+	return self.halted or nil
 end
 
 
@@ -282,12 +338,12 @@ minetest.register_globalstep(function ()
 	while i <= math.min(#processes, maxSteps) do
 		local process = processes[i]
 		for _ = 1, math.max(math.floor(maxSteps / #processes), 1) do
-			local action = process:step()
-			if action == "halt" then
+			process:step()
+			if process:isHalted() then
 				table.remove(processes, i)
 				i = i - 1
 				break
-			elseif action == "yield" then
+			elseif process:isYielding() then
 				break
 			end
 		end
