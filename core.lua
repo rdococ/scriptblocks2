@@ -73,6 +73,8 @@ sb2.Process.processCounts = {}
 
 function sb2.Process:initialize(frame, debugging)
 	self.starter = frame:getContext():getOwner()
+	self.debugging = debugging or false
+	
 	if self.starter then
 		local processCounts = sb2.Process.processCounts
 		local processCount = processCounts[self.starter] or 0
@@ -96,8 +98,6 @@ function sb2.Process:initialize(frame, debugging)
 	
 	self.yielding = false
 	self.halted = false
-	
-	self.debugging = debugging or false
 	
 	self:log("Started.")
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
