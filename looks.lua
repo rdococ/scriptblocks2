@@ -16,7 +16,7 @@ sb2.registerScriptblock("scriptblocks2:say", {
 			
 			local owner = context:getOwner()
 			if owner then
-				minetest.chat_send_player(owner, "[Process] " .. message)
+				minetest.chat_send_player(owner, "[Process] Said: " .. message)
 			end
 		end
 	}

@@ -56,6 +56,10 @@ Methods:
 	
 	getHaltingReason()
 		Returns the reason this process has halted, or nil if it hasn't.
+	
+	log(message, ...)
+		Logs a debug message to the player only if debugging is enabled.
+		Automatic formatting is applied using string.format. If one of the values is something like "{prettyprint = true, value = ...}", sb2.prettyPrint is called on it before formatting, but only if debugging is enabled.
 
 Node properties:
 	sb2_action(pos, node, process, frame, context)
@@ -67,7 +71,7 @@ sb2.Process = sb2.registerClass("process")
 sb2.Process.runningProcesses = {}
 sb2.Process.processCounts = {}
 
-function sb2.Process:initialize(frame, manual)
+function sb2.Process:initialize(frame, debugging)
 	self.starter = frame:getContext():getOwner()
 	if self.starter then
 		local processCounts = sb2.Process.processCounts
@@ -76,7 +80,7 @@ function sb2.Process:initialize(frame, manual)
 		processCounts[self.starter] = processCount + 1
 		
 		if processCount >= maxProcesses then
-			sb2.log("warning", "Process could not be started by %s (too many processes) at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
+			sb2.log("action", "%s could not start another process at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 			self:halt("TooManyProcesses")
 			return
 		end
@@ -93,8 +97,9 @@ function sb2.Process:initialize(frame, manual)
 	self.yielding = false
 	self.halted = false
 	
-	self.manual = manual or false
+	self.debugging = debugging or false
 	
+	self:log("Started.")
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
 	table.insert(sb2.Process.runningProcesses, self)
@@ -112,6 +117,7 @@ function sb2.Process:report(value)
 	if parent then
 		parent:receiveArg(value)
 	else
+		self:log("Reported: %s", {prettyprint = true, value = value})
 		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
 	end
 	self.frame = parent
@@ -185,12 +191,6 @@ function sb2.Process:step()
 			self.newMemoryUsage = 0
 			
 			if self.memoryUsage > maxMemory then
-				if self.frame then
-					sb2.log("warning", "Process started by %s ran out of memory at %s", self.starter or "(unknown)", minetest.pos_to_string(self.frame:getPos()))
-				else
-					sb2.log("warning", "Process started by %s ran out of memory somewhere", self.starter or "(unknown)")
-				end
-				
 				return self:halt("OutOfMemory")
 			end
 		end
@@ -199,6 +199,16 @@ end
 function sb2.Process:halt(reason)
 	self.halted = reason or true
 	sb2.Process.processCounts[self.starter] = sb2.Process.processCounts[self.starter] - 1
+	
+	if self.halted == "TooManyProcesses" then
+		self:log("You have too many processes!")
+	elseif self.halted == "OutOfMemory" then
+		self:log("Ran out of memory.")
+	elseif self.halted == true then
+		self:log("Finished normally.")
+	else
+		self:log("Halted somehow.")
+	end
 	
 	sb2.log("action", "Process by %s halted because %s", self.starter or "(unknown)", tostring(self.halted))
 end
@@ -213,6 +223,18 @@ function sb2.Process:isYielding()
 end
 function sb2.Process:getHaltingReason()
 	return self.halted or nil
+end
+function sb2.Process:log(message, ...)
+	if self.debugging then
+		local values = {...}
+		for i, v in ipairs(values) do
+			if type(v) == "table" and v.prettyprint then
+				values[i] = sb2.prettyPrint(v.value)
+			end
+		end
+		
+		minetest.chat_send_player(self.starter, string.format("[Process] " .. message, unpack(values)))
+	end
 end
 
 
