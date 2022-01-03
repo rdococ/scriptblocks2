@@ -13,7 +13,14 @@ local maxProcesses = settings:get("scriptblocks2_max_processes") or 500
 --[[
 Process
 
-A process is a running instance of a scriptblocks2 program. Processes store their current evaluation frame and an event queue for processing outside events (a mechanism which is still a work in progress).
+A process is a running instance of a scriptblocks2 program. Processes store their current evaluation frame, an event queue for processing outside events (a mechanism which is still a work in progress), and whether they are yielding/halted.
+
+Constructor:
+	new(frame, manual)
+		frame
+			The evaluation frame to start on. The process' 'starter' is automatically set to the owner of this frame.
+		manual
+			Whether this process was started manually using the runner tool or similar. This may send useful debugging information to the starter player in the future.
 
 Methods:
 	push(frame)
@@ -25,8 +32,8 @@ Methods:
 	
 	queueEvent(event)
 		Queues an event in the process's event queue. Currently, events are unused, and the language model for passing events to processes is yet to be worked out.
-	handleEvent(criteria)
-		Finds, pops and returns the first event that satisfies the given criteria.
+	handleEvent(criteria(event))
+		Finds, pops and returns the first event that satisfies the given criterium function.
 	
 	step()
 		Performs one execution step.
@@ -51,7 +58,7 @@ Methods:
 		Returns the reason this process has halted, or nil if it hasn't.
 
 Node properties:
-	sb2_action(pos, node, process, context, frame)
+	sb2_action(pos, node, process, frame, context)
 		When a scriptblock is evaluated, the process calls this function from the node definition to decide what to do. The function can call any of the methods presented in this file on existing processes, frames or contexts and/or create new frames and contexts. The function may be evaluated multiple times if control returns to the current frame; this is how scriptblocks can can evaluate multiple arguments, perform calculations and report the result.
 ]]
 
@@ -60,7 +67,7 @@ sb2.Process = sb2.registerClass("process")
 sb2.Process.runningProcesses = {}
 sb2.Process.processCounts = {}
 
-function sb2.Process:initialize(frame)
+function sb2.Process:initialize(frame, manual)
 	self.starter = frame:getContext():getOwner()
 	if self.starter then
 		local processCounts = sb2.Process.processCounts
@@ -85,6 +92,8 @@ function sb2.Process:initialize(frame)
 	
 	self.yielding = false
 	self.halted = false
+	
+	self.manual = manual or false
 	
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	

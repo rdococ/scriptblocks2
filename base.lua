@@ -211,7 +211,7 @@ minetest.register_tool("scriptblocks2:runner", {
 		local pos = pointed_thing.under
 		if minetest.is_protected(pos, name) then return end
 		
-		sb2.Process:new(sb2.Frame:new(pos, sb2.Context:new(pos, name)))
+		sb2.Process:new(sb2.Frame:new(pos, sb2.Context:new(pos, name)), true)
 	end
 })
 
