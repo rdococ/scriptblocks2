@@ -176,7 +176,7 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 		if not frame:isArgEvaluated("value") then
 			local procNode = minetest.get_node(procPos)
 			if procNode.name == "ignore" then
-				if not minetest.forceload_block(procPos, true) then return "yield" end
+				if not minetest.forceload_block(procPos, true) then return process:yield() end
 			end
 			
 			local procMeta = minetest.get_meta(procPos)
@@ -225,7 +225,7 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 		
 		local procNode = minetest.get_node(procPos)
 		if procNode.name == "ignore" then
-			if not minetest.forceload_block(procPos, true) then return "yield" end
+			if not minetest.forceload_block(procPos, true) then return process:yield() end
 		end
 		
 		local procMeta = minetest.get_meta(procPos)

@@ -189,7 +189,7 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		
 		local funcNode = minetest.get_node(funcPos)
 		if funcNode.name == "ignore" then
-			if not minetest.forceload_block(funcPos, true) then return "yield" end
+			if not minetest.forceload_block(funcPos, true) then return process:yield() end
 		end
 		
 		local funcMeta = minetest.get_meta(funcPos)
@@ -228,7 +228,7 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			
 			local funcNode = minetest.get_node(funcPos)
 			if funcNode.name == "ignore" then
-				if not minetest.forceload_block(funcPos, true) then return "yield" end
+				if not minetest.forceload_block(funcPos, true) then return process:yield() end
 			end
 			
 			local funcMeta = minetest.get_meta(funcPos)
