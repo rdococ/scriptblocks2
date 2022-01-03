@@ -18,10 +18,10 @@ function sb2.Closure:createCallFrame()
 	
 	return sb2.Frame:new(pos, self.context:copy())
 end
-function sb2.Closure:toStringWithRecord(record)
+function sb2.Closure:recordString(record)
 	return "<closure>"
 end
-function sb2.Closure:toLuaValueWithRecord(record)
+function sb2.Closure:recordLuaValue(record)
 	return
 end
 
