@@ -50,7 +50,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			
 			if sb2.functions[id] and placerName then
 				minetest.chat_send_player(placerName, "This closure has already been placed. Generating a new closure.")
-				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.functions[id].closurePos))
+				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.functions[id].pos or sb2.functions[id].closurePos))
 			end
 			
 			local parameter = itemMeta:get_string("parameter")
