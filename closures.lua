@@ -10,13 +10,10 @@ function sb2.Closure:initialize(id, context)
 	self.context = context:copy()
 end
 function sb2.Closure:getPos()
-	return sb2.functions[self.functionId] and sb2.functions[self.functionId].closurePos
+	return sb2.functions[self.functionId] and (sb2.functions[self.functionId].pos or sb2.functions[self.functionId].closurePos)
 end
-function sb2.Closure:createCallFrame()
-	local funcDef = sb2.functions[self.functionId]
-	local pos = funcDef.startPos
-	
-	return sb2.Frame:new(pos, self.context:copy())
+function sb2.Closure:getContext()
+	return self.context
 end
 function sb2.Closure:recordString(record)
 	return "<closure>"
@@ -82,21 +79,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		meta:set_string("owner", placerName)
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName, meta:get_string("parameter")))
 		
-		sb2.functions[id] = {closurePos = pos, startPos = vector.add(pos, dirs.right)}
-	end,
-	on_rotate = function (pos, node, user, mode, newParam2)
-		local dirs = sb2.facedirToDirs(newParam2)
-		
-		local meta = minetest.get_meta(pos)
-		local id = meta:get_string("id")
-		
-		local funcDef = sb2.functions[id]
-		if not funcDef then return end
-		
-		if vector.equals(pos, funcDef.closurePos) then
-			sb2.log("action", "Closure %s rotated at %s", id, minetest.pos_to_string(pos))
-			funcDef.startPos = vector.add(pos, dirs.right)
-		end
+		sb2.functions[id] = {pos = pos}
 	end,
 	on_destruct = function (pos)
 		local node = minetest.get_node(pos)
@@ -108,7 +91,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local funcDef = sb2.functions[id]
 		if not funcDef then return end
 		
-		if vector.equals(pos, funcDef.closurePos) then
+		local funcPos = funcDef.pos or funcDef.closurePos
+		if funcPos and vector.equals(pos, funcPos) then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
 			sb2.functions[id] = nil
 		end
@@ -129,10 +113,10 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local funcDef = sb2.functions[id]
 		if not funcDef then return end
 		
-		local startPos = vector.add(pos, dirs.right)
-		if not vector.equals(pos, funcDef.closurePos) or not vector.equals(startPos, funcDef.startPos) then
-			funcDef.closurePos = pos
-			funcDef.startPos = startPos
+		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
+			funcDef.pos = pos
+			funcDef.closurePos, funcDef.startPos = nil, nil
+			
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated closure position.")
 		end
@@ -154,11 +138,21 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
-		
 		local meta = minetest.get_meta(pos)
-		local id = meta:get_string("id")
 		
-		return process:report(sb2.Closure:new(id, context))
+		local closure = frame:getArg("call")
+		if closure then
+			local meta = minetest.get_meta(pos)
+			
+			local funcContext = closure:getContext():copy()
+			funcContext:setOwner(meta:get_string("owner"))
+			funcContext:declareVar(meta:get_string("parameter"), frame:getArg(1))
+			
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
+		else
+			local id = meta:get_string("id")
+			return process:report(sb2.Closure:new(id, context))
+		end
 	end,
 })
 
@@ -182,23 +176,17 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if not closure or not closure.createCallFrame then return process:report(nil) end
+		if not closure then return process:report(nil) end
 		
 		local funcPos = closure:getPos()
 		if not funcPos then return process:report(nil) end
 		
-		local funcNode = minetest.get_node(funcPos)
-		if funcNode.name == "ignore" then
-			if not minetest.forceload_block(funcPos, true) then return process:yield() end
-		end
+		local funcFrame = sb2.Frame:new(funcPos, context)
 		
-		local funcMeta = minetest.get_meta(funcPos)
+		funcFrame:setArg("call", closure)
+		funcFrame:setArg(1, frame:getArg(1))
 		
-		local newFrame = closure:createCallFrame()
-		newFrame:getContext():setOwner(funcMeta:get_string("owner"))
-		newFrame:getContext():declareVar(funcMeta:get_string("parameter"), frame:getArg(1))
-		
-		return process:replace(newFrame)
+		return process:replace(funcFrame)
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:run_closure", {
@@ -220,26 +208,20 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		if not frame:isArgEvaluated("value") then
+			frame:selectArg("value")
+			
 			local closure = frame:getArg("closure")
-			if not closure or not closure.createCallFrame then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if not closure then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
 			local funcPos = closure:getPos()
 			if not funcPos then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
-			local funcNode = minetest.get_node(funcPos)
-			if funcNode.name == "ignore" then
-				if not minetest.forceload_block(funcPos, true) then return process:yield() end
-			end
+			local funcFrame = sb2.Frame:new(funcPos, context)
 			
-			local funcMeta = minetest.get_meta(funcPos)
+			funcFrame:setArg("call", closure)
+			funcFrame:setArg(1, frame:getArg(1))
 			
-			frame:selectArg("value")
-			
-			local newFrame = closure:createCallFrame()
-			newFrame:getContext():setOwner(funcMeta:get_string("owner"))
-			newFrame:getContext():declareVar(funcMeta:get_string("parameter"), frame:getArg(1))
-			
-			return process:push(newFrame)
+			return process:push(funcFrame)
 		end
 		
 		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))

@@ -47,10 +47,21 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 	sb2_icon  = "sb2_icon_define_procedure.png",
 	sb2_slotted_faces = {"front"},
 	
-	sb2_action = sb2.simple_action {
-		continuation = "front",
-		action = function (pos, node, process, frame, context) end
-	},
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if frame:getArg("call") then
+			local meta = minetest.get_meta(pos)
+			
+			local procContext = sb2.Context:new(pos, meta:get_string("owner"))
+			procContext:declareVar(meta:get_string("parameter1"), frame:getArg(1))
+			procContext:declareVar(meta:get_string("parameter2"), frame:getArg(2))
+			
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), procContext))
+		else
+			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
+	end,
 	
 	on_construct = generateDefProcFormspec,
 	after_place_node = function (pos, placer, itemstack, pointed_thing)
@@ -174,20 +185,15 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.left), context))
 		end
 		if not frame:isArgEvaluated("value") then
-			local procNode = minetest.get_node(procPos)
-			if procNode.name == "ignore" then
-				if not minetest.forceload_block(procPos, true) then return process:yield() end
-			end
-			
-			local procMeta = minetest.get_meta(procPos)
-			
 			frame:selectArg("value")
 			
-			local newContext = sb2.Context:new(procPos, procMeta:get_string("owner"))
-			newContext:declareVar(procMeta:get_string("parameter1"), frame:getArg(1))
-			newContext:declareVar(procMeta:get_string("parameter2"), frame:getArg(2))
+			local procFrame = sb2.Frame:new(procPos, context)
 			
-			return process:push(sb2.Frame:new(procPos, newContext))
+			procFrame:setArg("call", true)
+			procFrame:setArg(1, frame:getArg(1))
+			procFrame:setArg(2, frame:getArg(2))
+			
+			return process:push(procFrame)
 		end
 		
 		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
@@ -223,18 +229,13 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		end
 		
-		local procNode = minetest.get_node(procPos)
-		if procNode.name == "ignore" then
-			if not minetest.forceload_block(procPos, true) then return process:yield() end
-		end
+		local procFrame = sb2.Frame:new(procPos, context)
 		
-		local procMeta = minetest.get_meta(procPos)
+		procFrame:setArg("call", true)
+		procFrame:setArg(1, frame:getArg(1))
+		procFrame:setArg(2, frame:getArg(2))
 		
-		local newContext = sb2.Context:new(procPos, procMeta:get_string("owner"))
-		newContext:declareVar(procMeta:get_string("parameter1"), frame:getArg(1))
-		newContext:declareVar(procMeta:get_string("parameter2"), frame:getArg(2))
-		
-		return process:replace(sb2.Frame:new(procPos, newContext))
+		return process:replace(procFrame)
 	end,
 })
 
