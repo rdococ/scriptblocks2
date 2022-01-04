@@ -49,11 +49,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 	after_place_node = function (pos, placer, itemstack, pointed_thing)
 		local placerName = placer and placer:get_player_name()
 		
-		local node = minetest.get_node(pos)
-		local dirs = sb2.facedirToDirs(node.param2)
-		
 		local meta = minetest.get_meta(pos)
-		
 		local id
 		
 		local itemMeta = itemstack:get_meta()
@@ -61,8 +57,11 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if itemId ~= "" then
 			id = itemId
 			
-			if sb2.functions[id] and placerName then
-				minetest.chat_send_player(placerName, "This closure has already been placed. Generating a new closure.")
+			if sb2.functions[id] then
+				if placerName then
+					minetest.chat_send_player(placerName, "This closure has already been placed. Creating a new closure.")
+				end
+				
 				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.functions[id].pos))
 			end
 			
@@ -81,30 +80,29 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if attempts > 10000 and sb.functions[id] then
 			if placerName then
 				minetest.chat_send_player(placerName, "Failed to initialize closure.")
-				sb2.log("error", "Failed to initialize closure at %s", minetest.pos_to_string(pos))
+				meta:set_string("owner", placerName)
 			end
+			
+			sb2.log("error", "Failed to initialize closure at %s", minetest.pos_to_string(pos))
+			meta:set_string("infotext", "Failed to initialize")
+			
 			return
 		end
 		
 		sb2.log("action", "Closure %s created at %s", id, minetest.pos_to_string(pos))
-		
 		meta:set_string("id", id)
-		meta:set_string("owner", placerName)
-		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName, meta:get_string("parameter")))
+		
+		if placerName then
+			meta:set_string("owner", placerName)
+		end
+		
+		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName or "(unknown)", meta:get_string("parameter")))
 		
 		sb2.functions[id] = {pos = pos}
 	end,
 	on_destruct = function (pos)
-		local node = minetest.get_node(pos)
-		local dirs = sb2.facedirToDirs(node.param2)
-		
-		local meta = minetest.get_meta(pos)
-		local id = meta:get_string("id")
-		
-		local funcDef = sb2.functions[id]
-		if not funcDef then return end
-		
-		if funcDef.pos and vector.equals(pos, funcDef.pos) then
+		local id = minetest.get_meta(pos):get_string("id")
+		if id ~= "" then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
 			sb2.functions[id] = nil
 		end
@@ -123,9 +121,12 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if id == "" then return end
 		
 		local funcDef = sb2.functions[id]
-		if not funcDef then return end
+		if not funcDef then
+			funcDef = {pos = pos}
+			sb2.functions[id] = funcDef
+		end
 		
-		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
+		if not vector.equals(pos, funcDef.pos) then
 			funcDef.pos = pos
 			
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
