@@ -10,7 +10,7 @@ function sb2.Closure:initialize(id, context)
 	self.context = context:copy()
 end
 function sb2.Closure:getPos()
-	return sb2.functions[self.functionId] and (sb2.functions[self.functionId].pos or sb2.functions[self.functionId].closurePos)
+	return sb2.functions[self.functionId] and sb2.functions[self.functionId].pos
 end
 function sb2.Closure:getContext()
 	return self.context
@@ -63,7 +63,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			
 			if sb2.functions[id] and placerName then
 				minetest.chat_send_player(placerName, "This closure has already been placed. Generating a new closure.")
-				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.functions[id].pos or sb2.functions[id].closurePos))
+				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.functions[id].pos))
 			end
 			
 			local parameter = itemMeta:get_string("parameter")
@@ -104,8 +104,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local funcDef = sb2.functions[id]
 		if not funcDef then return end
 		
-		local funcPos = funcDef.pos or funcDef.closurePos
-		if funcPos and vector.equals(pos, funcPos) then
+		if funcDef.pos and vector.equals(pos, funcDef.pos) then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
 			sb2.functions[id] = nil
 		end
@@ -128,7 +127,6 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
 			funcDef.pos = pos
-			funcDef.closurePos, funcDef.startPos = nil, nil
 			
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated closure position.")
