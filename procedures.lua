@@ -85,7 +85,7 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		local meta = minetest.get_meta(pos)
 		
 		meta:set_string("owner", owner)
-		meta:set_string("infotext", "Owner: " .. owner .. "\nNo procedure name or parameters set")
+		meta:set_string("infotext", "Owner: " .. owner .. "\nNo procedure name set")
 	end,
 	
 	on_receive_fields = function (pos, formname, fields, sender)
@@ -93,8 +93,29 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		if minetest.is_protected(pos, senderName) then minetest.record_protection_violation(pos, senderName); return end
 		
 		local meta = minetest.get_meta(pos)
-		local owner = meta:get_string("owner")
 		
+		local owner = meta:get_string("owner")
+		local procedure = meta:get_string("procedure")
+		local procDef = sb2.procedures[procedure]
+		
+		if procedure ~= "" then
+			-- If procedure is named but definition does not exist somehow (e.g. server crash), create it
+			-- After this step, code assumes that procedure name == "" OR definition exists
+			if not procDef then
+				procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
+				sb2.log("warning", "Procedure %s did not have definition somehow - creating it now")
+				sb2.procedures[procedure] = procDef
+			end
+			
+			-- If procedure is named and has moved (e.g. WorldEdit), update procedure definition
+			if not vector.equals(pos, procDef.pos) then
+				procDef.pos = pos
+				sb2.log("action", "Updated procedure %s position at %s", procedure, minetest.pos_to_string(pos))
+				minetest.chat_send_player(senderName, "Updated procedure position.")
+			end
+		end
+		
+		-- If any fields are changed, update metadata, and sometimes definition if it exists
 		if fields.parameter1 then
 			meta:set_string("parameter1", fields.parameter1)
 		end
@@ -102,50 +123,48 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 			meta:set_string("parameter2", fields.parameter2)
 		end
 		if fields.procedure then
-			local oldName, newName = meta:get_string("procedure"), fields.procedure
+			-- Make sure new name follows proper naming rules
+			local oldName, newName = procedure, fields.procedure
 			if newName:sub(1, owner:len() + 1) ~= owner .. ":" then
 				newName = owner .. ":" .. newName
 			end
 			
+			-- If new name already exists, just send a message to the user
+			-- Otherwise, change the procedure's name and move procedure definition
 			if newName ~= oldName then
 				if sb2.procedures[newName] then
-					if sender and sender:is_player() then
-						minetest.chat_send_player(sender:get_player_name(), "That procedure name already exists!")
-					end
+					minetest.chat_send_player(senderName, "That procedure name already exists!")
 				else
-					local procDef = sb2.procedures[oldName]
-					if procDef and vector.equals(procDef.pos, pos) then
+					-- If the procedure was already named, remove the old name's definition
+					-- Otherwise, the procedure has just now been named. Create a new definition
+					if oldName ~= "" then
 						sb2.procedures[oldName] = nil
 					else
-						procDef = nil
+						procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
 					end
 					
-					sb2.procedures[newName] = procDef or {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
+					-- Record definition at the new name, then update name in metadata and update variable
+					sb2.procedures[newName] = procDef
+					sb2.log("action", "Renamed procedure %s to %s", oldName, newName)
 					meta:set_string("procedure", newName)
+					
+					procedure = newName
 				end
 			end
 		end
 		if fields.public then
 			meta:set_string("public", fields.public)
 			
-			local procDef = sb2.procedures[meta:get_string("procedure")]
-			if procDef and vector.equals(procDef.pos, pos) then
+			-- If the procedure definition exists, set its publicity based on the checkbox
+			if procDef then
 				procDef.public = fields.public == "true"
 			end
 			
 			generateDefProcFormspec(pos)
 		end
 		
-		local procedure = meta:get_string("procedure")
+		-- Step 3: Update infotext only if procedure has been named
 		if procedure == "" then return end
-		
-		local procDef = sb2.procedures[procedure]
-		
-		if not vector.equals(pos, procDef.pos) then
-			procDef.pos = pos
-			sb2.log("action", "Updated procedure %s position at %s", procedure, minetest.pos_to_string(pos))
-			minetest.chat_send_player(senderName, "Updated procedure position.")
-		end
 		if procDef.owner ~= owner then
 			procDef.owner = owner
 		end
@@ -154,10 +173,9 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 	end,
 	
 	on_destruct = function (pos)
-		local oldName = minetest.get_meta(pos):get_string("procedure")
-		
-		if sb2.procedures[oldName] and vector.equals(sb2.procedures[oldName].pos, pos) then
-			sb2.procedures[oldName] = nil
+		local procedure = minetest.get_meta(pos):get_string("procedure")
+		if procedure ~= "" then
+			sb2.procedures[procedure] = nil
 		end
 	end,
 })
