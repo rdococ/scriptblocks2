@@ -4,6 +4,13 @@ sb2.colors.mesecons_on = "#ffff80"
 sb2.registerScriptblock("scriptblocks2:receive_mesecon_signal", {
 	sb2_label = "When I Receive Mesecon Signal",
 	
+	sb2_explanation = {
+		shortExplanation = "Starts a script after receiving a mesecon signal.",
+		inputSlots = {
+			{"Front", "What to do when a signal is received."},
+		},
+	},
+	
 	sb2_color = sb2.colors.mesecons,
 	sb2_icon  = "sb2_icon_receive.png",
 	sb2_slotted_faces = {"front"},

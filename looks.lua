@@ -3,6 +3,17 @@ sb2.colors.looks = "#b76cff"
 sb2.registerScriptblock("scriptblocks2:say", {
 	sb2_label = "Say",
 	
+	sb2_explanation = {
+		shortExplanation = "Says something in the chat.",
+		inputSlots = {
+			{"Right", "The message to say."},
+			{"Front", "What to do next."},
+		},
+		additionalPoints = {
+			"Only you can see the message!",
+		},
+	},
+	
 	sb2_color = sb2.colors.looks,
 	sb2_icon = "sb2_icon_say.png",
 	sb2_slotted_faces = {"right", "front"},

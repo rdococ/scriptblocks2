@@ -11,20 +11,34 @@ Functions:
 	makeTiles(color, icon, slots)
 		Takes a color, an icon, and an optional list of faces ("top", "right", "front", etc.). It produces a set of tiles with the icon slapped on top of the base texture, and slot images overlayed on the selected faces.
 	registerScriptblock(name, def)
-		Registers a 'vanilla' scriptblock node, using 'makeTiles' and optionally the 'single_input' mechanism.
-		Any node can be modified to interact with scriptblocks, but this is the simplest way to do it.
+		Registers a 'vanilla' scriptblock node.
+		Any node can be modified to act like a scriptblock, but this is the best way to do it. It ensures that all scriptblocks look and act alike.
 		
 		registerScriptblock only:
 			sb2_label
 				A human-readable name for the scriptblock. Suffixed with "Scriptblock" to create the item description.
+			sb2_explanation
+				A table representing an explanation of what the scriptblock does. The explanation is formatted, and used to generate tooltips if the Extended Tooltips mod is installed.
+				{
+					shortExplanation = ...,
+					inputValues = {
+						{value, explanation}, ...
+					}
+					inputSlots = {
+						{slottedFace, explanation}, ...
+					},
+					additionalPoints = ...
+				}
+			
 			sb2_color
 				The color of the scriptblock.
 			sb2_icon
-				The icon to be overlayed on the top face of the scriptblock.
+				The icon to be displayed on the top face of the scriptblock.
 			sb2_slotted_faces
 				A list of faces to be overlayed with slots.
 			sb2_input_name, sb2_input_label, sb2_input_default
 				The name of the metadata field used to store the input; the human-readable label for the input; and the input's default value. Automatically creates a formspec allowing users to enter a value for the input, and displays the input value in infotext.
+				Scriptblocks with multiple input values or complex validation can still do it manually.
 		
 		Can be used by any registered node:
 			sb2_action(pos, node, process, frame, context)
@@ -189,6 +203,37 @@ function sb2.registerScriptblock(id, def)
 	if digilines then
 		def.digilines = def.digilines or {}
 		def.digilines.receptor = def.digilines.receptor or {}
+	end
+	
+	if def.sb2_explanation then
+		local expDef = def.sb2_explanation
+		local tooltip = {}
+		
+		table.insert(tooltip, expDef.shortExplanation)
+		
+		if expDef.inputValues then
+			table.insert(tooltip, "Input Values:")
+			
+			for i, v in ipairs(expDef.inputValues) do
+				table.insert(tooltip, string.format("- %s: %s", unpack(v)))
+			end
+		end
+		if expDef.inputSlots then
+			table.insert(tooltip, "Input Slots:")
+			
+			for i, v in ipairs(expDef.inputSlots) do
+				table.insert(tooltip, string.format("- %s: %s", unpack(v)))
+			end
+		end
+		if expDef.additionalPoints then
+			table.insert(tooltip, "Additional Points:")
+			
+			for i, v in ipairs(expDef.additionalPoints) do
+				table.insert(tooltip, string.format("- %s", v))
+			end
+		end
+		
+		def._tt_help = table.concat(tooltip, "\n")
 	end
 	
 	minetest.register_node(id, def)

@@ -25,6 +25,19 @@ end
 sb2.registerScriptblock("scriptblocks2:create_closure", {
 	sb2_label = "Create Closure",
 	
+	sb2_explanation = {
+		shortExplanation = "Creates and reports a closure, an anonymous procedure that can be stored like a value.",
+		inputValues = {
+			{"Parameter", "The name of the variable to store the argument in."},
+		},
+		inputSlots = {
+			{"Right", "The scriptblocks to run when this closure is called."}
+		},
+		additionalPoints = {
+			"Closures can access and modify variables from where they were created."
+		}
+	},
+	
 	sb2_color = sb2.colors.closures,
 	sb2_icon  = "sb2_icon_define_procedure.png",
 	sb2_slotted_faces = {"right"},
@@ -159,6 +172,14 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 sb2.registerScriptblock("scriptblocks2:call_closure", {
 	sb2_label = "Call Closure",
 	
+	sb2_explanation = {
+		shortExplanation = "Calls a closure and reports its value.",
+		inputSlots = {
+			{"Front", "The closure to call."},
+			{"Right", "The value to pass to the closure."},
+		},
+	},
+	
 	sb2_color = sb2.colors.closures,
 	sb2_icon  = "sb2_icon_call_procedure.png",
 	sb2_slotted_faces = {"right", "front"},
@@ -192,9 +213,18 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 sb2.registerScriptblock("scriptblocks2:run_closure", {
 	sb2_label = "Run Closure",
 	
+	sb2_explanation = {
+		shortExplanation = "Runs a closure before continuing.",
+		inputSlots = {
+			{"Left", "The closure to run."},
+			{"Right", "The value to pass to the closure."},
+			{"Front", "What to do next."},
+		},
+	},
+	
 	sb2_color = sb2.colors.closures,
 	sb2_icon  = "sb2_icon_run_procedure.png",
-	sb2_slotted_faces = {"right", "left", "front"},
+	sb2_slotted_faces = {"left", "right", "front"},
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)

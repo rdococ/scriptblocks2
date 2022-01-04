@@ -3,6 +3,17 @@ sb2.colors.variables = "#f89110"
 sb2.registerScriptblock("scriptblocks2:declare_variable", {
 	sb2_label = "Declare Variable",
 	
+	sb2_explanation = {
+		shortExplanation = "Creates a new variable, holding a temporary value you can use in the next part of the script.",
+		inputValues = {
+			{"Variable", "The name of the new variable."},
+		},
+		inputSlots = {
+			{"Right", "The initial value of the variable."},
+			{"Front", "What to do next."},
+		},
+	},
+	
 	sb2_color = sb2.colors.variables,
 	sb2_icon = "sb2_icon_declare_var.png",
 	sb2_slotted_faces = {"right", "front"},
@@ -24,6 +35,20 @@ sb2.registerScriptblock("scriptblocks2:declare_variable", {
 
 sb2.registerScriptblock("scriptblocks2:set_variable", {
 	sb2_label = "Set Variable",
+	
+	sb2_explanation = {
+		shortExplanation = "Sets the value of an existing variable.",
+		inputValues = {
+			{"Variable", "The name of the variable to set."},
+		},
+		inputSlots = {
+			{"Right", "The new value of the variable."},
+			{"Front", "What to do next."},
+		},
+		additionalPoints = {
+			"Make sure the variable has been declared first!",
+		},
+	},
 	
 	sb2_color = sb2.colors.variables,
 	sb2_icon = "sb2_icon_set_var.png",
@@ -49,6 +74,16 @@ sb2.registerScriptblock("scriptblocks2:set_variable", {
 
 sb2.registerScriptblock("scriptblocks2:get_variable", {
 	sb2_label = "Get Variable",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports the value of an existing variable.",
+		inputValues = {
+			{"Variable", "The name of the variable to get."},
+		},
+		additionalPoints = {
+			"Make sure the variable has been declared first!",
+		},
+	},
 	
 	sb2_color = sb2.colors.variables,
 	sb2_icon = "sb2_icon_ellipsis.png",

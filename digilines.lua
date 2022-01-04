@@ -3,6 +3,19 @@ sb2.colors.digilines = "#8080ff"
 sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 	sb2_label = "When I Receive Digiline Message",
 	
+	sb2_explanation = {
+		shortExplanation = "Starts a script after receiving a digiline message.",
+		inputValues = {
+			{"Channel", "The channel to listen out for."},
+		},
+		inputSlots = {
+			{"Front", "What to do when a message is received."},
+		},
+		additionalPoints = {
+			"The content of the message is available in a variable called 'message'.",
+		},
+	},
+	
 	sb2_color = sb2.colors.digilines,
 	sb2_icon  = "sb2_icon_receive.png",
 	sb2_slotted_faces = {"front"},
@@ -56,9 +69,21 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 	sb2_label = "Send Digiline Message",
 	
+	sb2_explanation = {
+		shortExplanation = "Sends a digiline message from the starting block.",
+		inputSlots = {
+			{"Left", "The channel to send the message on."},
+			{"Right", "The message to send."},
+			{"Front", "What to do next."},
+		},
+		additionalPoints = {
+			"The content of the message is available in a variable called 'message'.",
+		},
+	},
+	
 	sb2_color = sb2.colors.digilines,
 	sb2_icon  = "sb2_icon_send.png",
-	sb2_slotted_faces = {"front", "right", "left"},
+	sb2_slotted_faces = {"right", "left", "front"},
 	
 	sb2_action = sb2.simple_action {
 		arguments = {"left", "right"},

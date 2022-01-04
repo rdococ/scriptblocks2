@@ -43,6 +43,19 @@ end
 sb2.registerScriptblock("scriptblocks2:define_procedure", {
 	sb2_label = "Define Procedure",
 	
+	sb2_explanation = {
+		shortExplanation = "Defines a custom procedure.",
+		inputValues = {
+			{"Name", "The name of this procedure."},
+			{"Right Parameter", "The name of the variable to store the right argument in."},
+			{"Front/Left Parameter", "The name of the variable to store the front/left argument in."},
+			{"Public", "Whether this procedure can be called by other players' scripts."},
+		},
+		inputSlots = {
+			{"Front", "What to do when this procedure is called."},
+		},
+	},
+	
 	sb2_color = sb2.colors.procedures,
 	sb2_icon  = "sb2_icon_define_procedure.png",
 	sb2_slotted_faces = {"front"},
@@ -158,6 +171,18 @@ end
 sb2.registerScriptblock("scriptblocks2:run_procedure", {
 	sb2_label = "Run Procedure",
 	
+	sb2_explanation = {
+		shortExplanation = "Runs a custom procedure before continuing.",
+		inputValues = {
+			{"Procedure", "The name of the procedure to run."},
+		},
+		inputSlots = {
+			{"Right", "The first value to pass to the procedure."},
+			{"Left", "The second value to pass to the procedure."},
+			{"Front", "What to do next."},
+		},
+	},
+	
 	sb2_color = sb2.colors.procedures,
 	sb2_icon  = "sb2_icon_run_procedure.png",
 	sb2_slotted_faces = {"right", "left", "front"},
@@ -201,6 +226,17 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 })
 sb2.registerScriptblock("scriptblocks2:call_procedure", {
 	sb2_label = "Call Procedure",
+	
+	sb2_explanation = {
+		shortExplanation = "Calls a custom procedure and reports its value.",
+		inputValues = {
+			{"Procedure", "The name of the procedure to call."},
+		},
+		inputSlots = {
+			{"Right", "The first value to pass to the procedure."},
+			{"Front", "The second value to pass to the procedure."},
+		},
+	},
 	
 	sb2_color = sb2.colors.procedures,
 	sb2_icon  = "sb2_icon_call_procedure.png",

@@ -54,6 +54,13 @@ end
 sb2.registerScriptblock("scriptblocks2:create_empty_list", {
 	sb2_label = "Create Empty List",
 	
+	sb2_explanation = {
+		shortExplanation = "Creates and reports an empty list.",
+		additionalPoints = {
+			"A list is a value that holds an ordered sequence of other values.",
+		},
+	},
+	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_list.png",
 	
@@ -67,6 +74,17 @@ sb2.registerScriptblock("scriptblocks2:create_empty_list", {
 
 sb2.registerScriptblock("scriptblocks2:append_to_list", {
 	sb2_label = "Append To List",
+	
+	sb2_explanation = {
+		shortExplanation = "Appends an item to the end of a list.",
+		inputValues = {
+			{"Variable", "The list to append the item to."},
+		},
+		inputSlots = {
+			{"Right", "The value of the item to append."},
+			{"Front", "What to do next."},
+		},
+	},
 	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_add.png",
@@ -94,6 +112,17 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 })
 sb2.registerScriptblock("scriptblocks2:remove_from_list", {
 	sb2_label = "Remove From List",
+	
+	sb2_explanation = {
+		shortExplanation = "Removes an item from a list.",
+		inputValues = {
+			{"Variable", "The list to remove the item from."},
+		},
+		inputSlots = {
+			{"Right", "The index of the item to remove."},
+			{"Front", "What to do next."},
+		},
+	},
 	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_subtract.png",
@@ -125,6 +154,18 @@ sb2.registerScriptblock("scriptblocks2:remove_from_list", {
 })
 sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 	sb2_label = "Insert Into List",
+	
+	sb2_explanation = {
+		shortExplanation = "Insert an item into the middle of a list.",
+		inputValues = {
+			{"Variable", "The list to insert the item into."},
+		},
+		inputSlots = {
+			{"Left", "The index to insert the item into."},
+			{"Right", "The value of the item to insert."},
+			{"Front", "What to do next."},
+		},
+	},
 	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_insert_into_list.png",
@@ -158,6 +199,18 @@ sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 sb2.registerScriptblock("scriptblocks2:set_list_item", {
 	sb2_label = "Set List Item",
 	
+	sb2_explanation = {
+		shortExplanation = "Sets the value of a list item to a new value.",
+		inputValues = {
+			{"Variable", "The list to set a list item in."},
+		},
+		inputSlots = {
+			{"Left", "The index of the list item to set."},
+			{"Right", "The new value of the item."},
+			{"Front", "What to do next."},
+		},
+	},
+	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_set_list_item.png",
 	sb2_slotted_faces = {"right", "left", "front"},
@@ -189,6 +242,16 @@ sb2.registerScriptblock("scriptblocks2:set_list_item", {
 sb2.registerScriptblock("scriptblocks2:get_list_item", {
 	sb2_label = "Get List Item",
 	
+	sb2_explanation = {
+		shortExplanation = "Reports the value of a list item.",
+		inputValues = {
+			{"Variable", "The list of the item to report."},
+		},
+		inputSlots = {
+			{"Right", "The index of the item to report in the list."},
+		},
+	},
+	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_index.png",
 	sb2_slotted_faces = {"right"},
@@ -219,6 +282,13 @@ sb2.registerScriptblock("scriptblocks2:get_list_item", {
 
 sb2.registerScriptblock("scriptblocks2:get_list_length", {
 	sb2_label = "Get List Length",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports the value of a list item.",
+		inputValues = {
+			{"Variable", "The list to report the value of."},
+		},
+	},
 	
 	sb2_color = sb2.colors.lists,
 	sb2_icon = "sb2_icon_count.png",

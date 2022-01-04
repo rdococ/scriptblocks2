@@ -36,6 +36,13 @@ end
 sb2.registerScriptblock("scriptblocks2:create_empty_dictionary", {
 	sb2_label = "Create Empty Dictionary",
 	
+	sb2_explanation = {
+		shortExplanation = "Creates and reports an empty dictionary.",
+		additionalPoints = {
+			"A dictionary is like a list, but the indexes can be anything.",
+		},
+	},
+	
 	sb2_color = sb2.colors.dictionaries,
 	sb2_icon = "sb2_icon_dictionary.png",
 	
@@ -49,6 +56,18 @@ sb2.registerScriptblock("scriptblocks2:create_empty_dictionary", {
 
 sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 	sb2_label = "Set Dictionary Entry",
+	
+	sb2_explanation = {
+		shortExplanation = "Sets an entry in a dictionary to a new value.",
+		inputValues = {
+			{"Variable", "The dictionary to set the entry in."},
+		},
+		inputSlots = {
+			{"Left", "The key to store the entry in."},
+			{"Right", "The new value of the entry."},
+			{"Front", "What to do next."},
+		},
+	},
 	
 	sb2_color = sb2.colors.dictionaries,
 	sb2_icon = "sb2_icon_set_list_item.png",
@@ -78,6 +97,16 @@ sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 })
 sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 	sb2_label = "Get Dictionary Entry",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports the value of an entry in the dictionary.",
+		inputValues = {
+			{"Variable", "The dictionary to get the entry from."},
+		},
+		inputSlots = {
+			{"Right", "The key of the entry you want to retrieve."},
+		},
+	},
 	
 	sb2_color = sb2.colors.dictionaries,
 	sb2_icon = "sb2_icon_index.png",

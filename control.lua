@@ -3,6 +3,18 @@ sb2.colors.control = "#f9e944"
 sb2.registerScriptblock("scriptblocks2:if", {
 	sb2_label = "If",
 	
+	sb2_explanation = {
+		shortExplanation = "Evaluates one input slot if the condition is true. Otherwise, evaluates the other.",
+		inputSlots = {
+			{"Right", "The condition to decide which slot to evaluate."},
+			{"Front", "The slot to evaluate if the condition is true."},
+			{"Left", "The slot to evaluate if the condition is false."},
+		},
+		additionalPoints = {
+			"The left slot is *not* evaluated if the condition is true.",
+		},
+	},
+	
 	sb2_color = sb2.colors.control,
 	sb2_icon = "sb2_icon_if.png",
 	sb2_slotted_faces = {"right", "front", "left"},
@@ -25,6 +37,14 @@ sb2.registerScriptblock("scriptblocks2:if", {
 
 sb2.registerScriptblock("scriptblocks2:wait", {
 	sb2_label = "Wait",
+	
+	sb2_explanation = {
+		shortExplanation = "Waits for a specified amount of time before continuing.",
+		inputSlots = {
+			{"Right", "The amount of time to wait for in seconds."},
+			{"Front", "What to do after time is up."},
+		},
+	},
 	
 	sb2_color = sb2.colors.control,
 	sb2_icon = "sb2_icon_wait.png",
