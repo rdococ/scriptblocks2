@@ -137,48 +137,36 @@ function sb2.Process:step()
 	if self.halted then return end
 	self.yielding = false
 	
-	local oldFrame = self.frame
-	if not oldFrame then return self:halt() end
+	local frame = self.frame
+	if not frame then return self:halt() end
 	
-	local pos = oldFrame.pos
+	local pos = frame.pos
+	local node = frame:requestNode()
 	
-	local node = minetest.get_node(pos)
-	local nodename = node.name
-	
-	if nodename == "ignore" then
-		if not minetest.forceload_block(pos, true) then return self:yield() end
-		
-		node = minetest.get_node(pos)
-		nodename = node.name
-		
-		if nodename == "ignore" then return self:yield() end
+	if node == nil then return self:yield() end
+	if node == false then
+		self:log("Failed to load block at %s", minetest.pos_to_string(pos))
 	end
+	
+	local nodename = node and node.name or "ignore"
 	
 	local def = minetest.registered_nodes[nodename]
 	if def and def.sb2_action then
-		def.sb2_action(pos, node, self, oldFrame, oldFrame:getContext())
+		def.sb2_action(pos, node, self, frame, frame:getContext())
 	else
 		self:report(nil)
 	end
+	frame = self.frame
 	
 	for i = 1, #self.eventQueue do
 		table.remove(self.eventQueue, 1)
 	end
 	
-	if not self.frame or not vector.equals(pos, self.frame:getPos()) then
-		minetest.forceload_free_block(pos, true)
-		if self.frame then
-			minetest.forceload_block(self.frame:getPos(), true)
-		end
-	end
-	
-	local getSize = sb2.getSize
-	
 	if not self.halted then
 		local i = 1
 		if self.memoryScanner:hasNext() then
 			local object = self.memoryScanner:next()
-			local size = getSize(object)
+			local size = sb2.getSize(object)
 			
 			self.newMemoryUsage = self.newMemoryUsage + size
 			
@@ -266,6 +254,16 @@ Methods:
 		Selects the given argument as the "report destination" for the next frame that this frame pushes onto the process.
 	receiveArg(value)
 		Receives a value, storing it in the selected argument and marking it as evaluated.
+	
+	requestNode()
+		Attempts to emerge the node at this frame's position.
+		Return values:
+			nil
+				The emerge request is pending.
+			{name = ..., ...}
+				The emerge request was successful, here's the node's data.
+			false
+				The emerge request failed.
 ]]
 
 sb2.Frame = sb2.registerClass("frame")
@@ -278,6 +276,9 @@ function sb2.Frame:initialize(pos, context)
 	self.arguments = {}
 	self.argsEvaluated = {}
 	self.selectedArg = nil
+	
+	self.requestedEmerge = false
+	self.emergeFailed = false
 end
 function sb2.Frame:getPos()
 	return self.pos
@@ -310,6 +311,30 @@ end
 function sb2.Frame:receiveArg(value)
 	self.arguments[self.selectedArg] = value
 	self.argsEvaluated[self.selectedArg] = true
+end
+function sb2.Frame:requestNode()
+	local pos = self.pos
+	local node = minetest.get_node(pos)
+	
+	if node.name == "ignore" then
+		if not self.requestedEmerge then
+			minetest.emerge_area(pos, pos, function (blockPos, action)
+				if action == minetest.EMERGE_CANCELLED or action == minetest.EMERGE_ERRORED then
+					self.emergeFailed = true
+					sb2.log("warning", "Failed to emerge scriptblock at %s", minetest.pos_to_string(pos))
+				end
+			end)
+			self.requestedEmerge = true
+			sb2.log("info", "Requested to emerge scriptblock at %s", minetest.pos_to_string(pos))
+			return nil
+		elseif self.emergeFailed then
+			return false
+		else
+			return nil
+		end
+	else
+		return node
+	end
 end
 
 
