@@ -53,12 +53,12 @@ sb2.registerScriptblock("scriptblocks2:identity", {
 	sb2_label = "Identity",
 	
 	sb2_explanation = {
-		shortExplanation = "Hands evaluation to the next scriptblock.",
+		shortExplanation = "Runs the next scriptblock.",
 		inputSlots = {
-			{"Right", "The scriptblock to hand evaluation to."}
+			{"Right", "The scriptblock to run."}
 		},
 		additionalPoints = {
-			"This can be used to merge different control paths, or form loops!",
+			"This can be used to merge different paths or form loops!",
 		}
 	},
 	
