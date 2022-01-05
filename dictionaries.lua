@@ -4,12 +4,18 @@ sb2.Dictionary = sb2.registerClass("dictionary")
 
 function sb2.Dictionary:initialize()
 	self.entries = {}
+	self.size = 0
 end
 function sb2.Dictionary:getEntry(index)
 	return self.entries[index]
 end
 function sb2.Dictionary:setEntry(index, value)
+	if self.entries[index] ~= nil then self.size = self.size - 1 end
+	if value ~= nil then self.size = self.size + 1 end
 	self.entries[index] = value
+end
+function sb2.Dictionary:getSize()
+	return self.size
 end
 function sb2.Dictionary:recordString(record)
 	record[self] = true
@@ -86,7 +92,7 @@ sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 			
 			local dict = var and var.value
 			
-			if not dict then return end
+			if type(dict) ~= "table" then return end
 			if not dict.setEntry then return end
 			
 			if index == nil then return end
@@ -99,7 +105,7 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 	sb2_label = "Get Dictionary Entry",
 	
 	sb2_explanation = {
-		shortExplanation = "Reports the value of an entry in the dictionary.",
+		shortExplanation = "Reports the value of an entry in a dictionary.",
 		inputValues = {
 			{"Variable", "The dictionary to get the entry from."},
 		},
@@ -124,12 +130,45 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 			
 			local dict = var and var.value
 			
-			if not dict then return end
+			if type(dict) ~= "table" then return end
 			if not dict.getEntry then return end
 			
 			if index == nil then return end
 			
 			return dict:getEntry(index)
+		end
+	}
+})
+sb2.registerScriptblock("scriptblocks2:get_dictionary_size", {
+	sb2_label = "Get Dictionary Size",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports the number of entries in a dictionary.",
+		inputValues = {
+			{"Variable", "The dictionary to get the size of."},
+		},
+	},
+	
+	sb2_color = sb2.colors.dictionaries,
+	sb2_icon = "sb2_icon_count.png",
+	sb2_slotted_faces = {},
+	
+	sb2_input_name = "varname",
+	sb2_input_label = "Variable",
+	sb2_input_default = "",
+	
+	sb2_action = sb2.simple_action {
+		arguments = {},
+		action = function (pos, node, process, frame, context)
+			local varname = minetest.get_meta(pos):get_string("varname")
+			local var = context:getVar(varname)
+			
+			local dict = var and var.value
+			
+			if type(dict) ~= "table" then return end
+			if not dict.getSize then return end
+			
+			return dict:getSize()
 		end
 	}
 })
