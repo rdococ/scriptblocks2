@@ -5,7 +5,7 @@ sb2.List = sb2.registerClass("list")
 function sb2.List:initialize()
 	self.items = {}
 end
-function sb2.List:getLength()
+function sb2.List:getSize()
 	return #self.items
 end
 function sb2.List:getItem(index)
@@ -26,7 +26,7 @@ end
 function sb2.List:asListIndex(index, extendedRange)
 	index = sb2.toNumber(index)
 	if index < 0.5 then return end
-	if index >= self:getLength() + (extendedRange and 1.5 or 0.5) then return end
+	if index >= #self.items + (extendedRange and 1.5 or 0.5) then return end
 	return math.ceil(index - 0.5)
 end
 function sb2.List:recordString(record)
@@ -305,9 +305,9 @@ sb2.registerScriptblock("scriptblocks2:get_list_length", {
 			local list = var and var.value
 			
 			if type(list) ~= "table" then return end
-			if not list.getLength then return end
+			if not list.getSize then return end
 			
-			return list:getLength()
+			return list:getSize()
 		end
 	}
 })
