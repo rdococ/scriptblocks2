@@ -296,6 +296,16 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 	end,
 })
 
+local t = 0
+minetest.register_globalstep(function (dt)
+	t = t + dt
+	
+	if t > 60 then
+		modStorage:set_string("procedures", minetest.serialize(sb2.procedures))
+		t = 0
+	end
+end)
+
 minetest.register_on_shutdown(function ()
 	modStorage:set_string("procedures", minetest.serialize(sb2.procedures))
 end)

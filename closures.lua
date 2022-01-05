@@ -257,6 +257,16 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 	end,
 })
 
+local t = 0
+minetest.register_globalstep(function (dt)
+	t = t + dt
+	
+	if t > 60 then
+		modStorage:set_string("closures", minetest.serialize(sb2.closures))
+		t = 0
+	end
+end)
+
 minetest.register_on_shutdown(function ()
 	modStorage:set_string("functions", "")
 	modStorage:set_string("closures", minetest.serialize(sb2.closures))
