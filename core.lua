@@ -23,6 +23,9 @@ Constructor:
 			Whether this process was started manually using the runner tool or similar. This may send useful debugging information to the starter player in the future.
 
 Methods:
+	getStarter()
+		Gets the player that 'started' this process (i.e. the owner of the initial block of the entire process, not just the current procedure).
+	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
 	replace(frame)
@@ -103,6 +106,9 @@ function sb2.Process:initialize(frame, debugging)
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
 	table.insert(sb2.Process.runningProcesses, self)
+end
+function sb2.Process:getStarter()
+	return self.starter
 end
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)

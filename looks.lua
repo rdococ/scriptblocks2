@@ -4,13 +4,13 @@ sb2.registerScriptblock("scriptblocks2:say", {
 	sb2_label = "Say",
 	
 	sb2_explanation = {
-		shortExplanation = "Says something in the chat.",
+		shortExplanation = "Says something in the chat to the starter of the process.",
 		inputSlots = {
 			{"Right", "The message to say."},
 			{"Front", "What to do next."},
 		},
 		additionalPoints = {
-			"Only you can see the message!",
+			"If someone else calls your procedure, they can see the message!",
 		},
 	},
 	
@@ -25,9 +25,9 @@ sb2.registerScriptblock("scriptblocks2:say", {
 		action = function (pos, node, process, frame, context, message)
 			message = sb2.toString(message)
 			
-			local owner = context:getOwner()
-			if owner then
-				minetest.chat_send_player(owner, "[Process] Said: " .. message)
+			local starter = process:getStarter()
+			if starter then
+				minetest.chat_send_player(starter, "[Process] Said: " .. message)
 			end
 		end
 	}
