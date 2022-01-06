@@ -64,3 +64,28 @@ sb2.registerScriptblock("scriptblocks2:get_context_owner", {
 		end
 	}
 })
+
+sb2.registerScriptblock("scriptblocks2:get_type", {
+	sb2_label = "Get Type",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports whether a given value is a string, number, list, etc.",
+		inputSlots = {
+			{"Right", "The value to get the type of."}
+		},
+	},
+	
+	sb2_color = sb2.colors.fun,
+	sb2_icon = "sb2_icon_question.png",
+	sb2_slotted_faces = {"right"},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {"right"},
+		action = function (pos, node, process, frame, context, value)
+			if type(value) ~= "table" then return type(value) end
+			if not value.getClass then return "table" end
+			
+			return value:getClass().name
+		end
+	}
+})
