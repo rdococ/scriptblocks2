@@ -284,9 +284,9 @@ sb2.registerScriptblock("scriptblocks2:get_list_length", {
 	sb2_label = "Get List Length",
 	
 	sb2_explanation = {
-		shortExplanation = "Reports the value of a list item.",
+		shortExplanation = "Reports the number of items in a list.",
 		inputValues = {
-			{"Variable", "The list to report the value of."},
+			{"Variable", "The list to report the length of."},
 		},
 	},
 	
