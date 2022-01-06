@@ -1,4 +1,4 @@
-sb2.colors.numbers = "#10e81e"
+sb2.colors.operators = "#10e81e"
 sb2.colors.strings = "#c3e51b"
 sb2.colors.booleans = "#04d349"
 
@@ -13,7 +13,7 @@ sb2.registerScriptblock("scriptblocks2:add", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_add.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -35,7 +35,7 @@ sb2.registerScriptblock("scriptblocks2:subtract", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_subtract.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -57,7 +57,7 @@ sb2.registerScriptblock("scriptblocks2:multiply", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_multiply.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -79,7 +79,7 @@ sb2.registerScriptblock("scriptblocks2:divide", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_divide.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -104,7 +104,7 @@ sb2.registerScriptblock("scriptblocks2:modulo", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_modulo.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -126,7 +126,7 @@ sb2.registerScriptblock("scriptblocks2:raise_to_power", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_raise_to_power.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -149,7 +149,7 @@ sb2.registerScriptblock("scriptblocks2:less_than", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_less_than.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -171,7 +171,7 @@ sb2.registerScriptblock("scriptblocks2:equals", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_equals.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -193,7 +193,7 @@ sb2.registerScriptblock("scriptblocks2:greater_than", {
 		},
 	},
 	
-	sb2_color = sb2.colors.numbers,
+	sb2_color = sb2.colors.operators,
 	sb2_icon = "sb2_icon_greater_than.png",
 	sb2_slotted_faces = {"right", "front"},
 	
@@ -369,4 +369,29 @@ sb2.registerScriptblock("scriptblocks2:or", {
 		
 		return process:report(frame:getArg(2))
 	end,
+})
+
+sb2.registerScriptblock("scriptblocks2:get_type", {
+	sb2_label = "Get Type",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports whether a given value is a string, number, list, etc.",
+		inputSlots = {
+			{"Right", "The value to get the type of."}
+		},
+	},
+	
+	sb2_color = sb2.colors.operators,
+	sb2_icon = "sb2_icon_if.png",
+	sb2_slotted_faces = {"right"},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {"right"},
+		action = function (pos, node, process, frame, context, value)
+			if type(value) ~= "table" then return type(value) end
+			if not value.getClass then return "table" end
+			
+			return value:getClass().name
+		end
+	}
 })
