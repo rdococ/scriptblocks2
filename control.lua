@@ -16,7 +16,7 @@ sb2.registerScriptblock("scriptblocks2:if", {
 	},
 	
 	sb2_color = sb2.colors.control,
-	sb2_icon = "sb2_icon_if.png",
+	sb2_icon = "sb2_icon_question.png",
 	sb2_slotted_faces = {"right", "front", "left"},
 	
 	sb2_action = function (pos, node, process, frame, context)

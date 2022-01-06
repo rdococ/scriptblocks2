@@ -8,7 +8,7 @@ sb2.registerScriptblock("scriptblocks2:get_call_stack_length", {
 	},
 	
 	sb2_color = sb2.colors.fun,
-	sb2_icon  = "sb2_icon_count.png",
+	sb2_icon = "sb2_icon_count.png",
 	sb2_slotted_faces = {},
 	
 	sb2_action = sb2.simple_action {
@@ -35,7 +35,7 @@ sb2.registerScriptblock("scriptblocks2:get_memory_usage", {
 	},
 	
 	sb2_color = sb2.colors.fun,
-	sb2_icon  = "sb2_icon_list.png",
+	sb2_icon = "sb2_icon_list.png",
 	sb2_slotted_faces = {},
 	
 	sb2_action = sb2.simple_action {
@@ -54,7 +54,7 @@ sb2.registerScriptblock("scriptblocks2:get_context_owner", {
 	},
 	
 	sb2_color = sb2.colors.fun,
-	sb2_icon  = "sb2_icon_if.png",
+	sb2_icon = "sb2_icon_question.png",
 	sb2_slotted_faces = {},
 	
 	sb2_action = sb2.simple_action {

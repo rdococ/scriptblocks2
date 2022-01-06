@@ -382,7 +382,7 @@ sb2.registerScriptblock("scriptblocks2:get_type", {
 	},
 	
 	sb2_color = sb2.colors.operators,
-	sb2_icon = "sb2_icon_if.png",
+	sb2_icon = "sb2_icon_question.png",
 	sb2_slotted_faces = {"right"},
 	
 	sb2_action = sb2.simple_action {
