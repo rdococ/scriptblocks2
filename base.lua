@@ -200,11 +200,6 @@ function sb2.registerScriptblock(id, def)
 	
 	def.tiles = def.tiles or sb2.makeTiles(def.sb2_color, def.sb2_icon, def.sb2_slotted_faces)
 	
-	if digilines then
-		def.digilines = def.digilines or {}
-		def.digilines.receptor = def.digilines.receptor or {}
-	end
-	
 	if def.sb2_explanation then
 		local expDef = def.sb2_explanation
 		local tooltip = {}

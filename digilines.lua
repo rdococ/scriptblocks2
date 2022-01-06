@@ -77,7 +77,7 @@ sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 			{"Front", "What to do next."},
 		},
 		additionalPoints = {
-			"The content of the message is available in a variable called 'message'.",
+			"You can only send a digiline message from a 'When I Receive Digiline Message' block!",
 		},
 	},
 	
