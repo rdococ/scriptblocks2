@@ -242,6 +242,8 @@ end
 minetest.register_tool("scriptblocks2:runner", {
 	description = "Scriptblock Runner",
 	
+	_tt_help = "Starts a new scriptblocks process on the pointed block.",
+	
 	inventory_image = "sb2_runner.png",
 	wield_image = "sb2_runner.png^[transformFX",
 	
