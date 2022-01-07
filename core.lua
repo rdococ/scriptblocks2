@@ -25,6 +25,8 @@ Constructor:
 Methods:
 	getStarter()
 		Gets the player that 'started' this process (i.e. the owner of the initial block of the entire process, not just the current procedure).
+	getHead()
+		Gets the 'head' of this process (the position of the block that this process started on).
 	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
@@ -42,11 +44,13 @@ Methods:
 		Performs one execution step.
 	
 	halt(reason)
-		Halts this process. The process is still in runningProcesses until the end of the next Minetest tick, and calling step() does nothing. Halting reason can be anything truthy, but generally one of the following:
+		Halts this process. Halting reason can be anything truthy, but generally one of the following:
 			"TooManyProcesses"
 				This process was halted at the start because the player has already reached maxProcesses.
 			"OutOfMemory"
 				This process was halted because it exceeded maxMemory.
+			"StoppedManually"
+				This process was stopped by external forces, such as a player using a Scriptblock Stopper.
 			true
 				This process ended normally without any issues.
 	yield()
@@ -64,6 +68,12 @@ Methods:
 		Logs a debug message to the player only if debugging is enabled.
 		Automatic formatting is applied using string.format. If one of the values is something like "{prettyprint = true, value = ...}", sb2.prettyPrint is called on it before formatting, but only if debugging is enabled.
 
+Static methods:
+	stopAllProcessesFor(starter)
+		Stops all processes attributed to the given username. Returns the number of processes stopped.
+	stopProcessesFor(starter, head)
+		Stops all processes attributed to the given username that began at the given location. Returns the number of processes stopped.
+
 Node properties:
 	sb2_action(pos, node, process, frame, context)
 		When a scriptblock is evaluated, the process calls this function from the node definition to decide what to do. The function can call any of the methods presented in this file on existing processes, frames or contexts and/or create new frames and contexts. The function may be evaluated multiple times if control returns to the current frame; this is how scriptblocks can can evaluate multiple arguments, perform calculations and report the result.
@@ -71,18 +81,43 @@ Node properties:
 
 sb2.Process = sb2.registerClass("process")
 
-sb2.Process.runningProcesses = {}
-sb2.Process.processCounts = {}
+sb2.Process.processList = {}
+sb2.Process.starterInfo = {}
+
+function sb2.Process:stopAllProcessesFor(starter)
+	local n = 0
+	for process, _ in pairs(sb2.shallowCopy(sb2.Process.starterInfo[starter].processes)) do
+		process:halt("StoppedManually")
+		n = n + 1
+	end
+	return n
+end
+
+function sb2.Process:stopProcessesFor(starter, head)
+	local n = 0
+	for process, _ in pairs(sb2.shallowCopy(sb2.Process.starterInfo[starter].processes)) do
+		if vector.equals(process:getHead(), head) then
+			process:halt("StoppedManually")
+			n = n + 1
+		end
+	end
+	return n
+end
 
 function sb2.Process:initialize(frame, debugging)
-	self.starter = frame:getContext():getOwner()
+	local context = frame:getContext()
+	
+	self.starter = context:getOwner()
+	self.head = context:getHead()
+	
 	self.debugging = debugging or false
 	
 	if self.starter then
-		local processCounts = sb2.Process.processCounts
-		local processCount = processCounts[self.starter] or 0
+		local starterInfo = sb2.Process.starterInfo[self.starter]
+		local processCount = starterInfo.processCount
 		
-		processCounts[self.starter] = processCount + 1
+		starterInfo.processes[self] = true
+		starterInfo.processCount = processCount + 1
 		
 		if processCount >= maxProcesses then
 			sb2.log("action", "%s could not start another process at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
@@ -105,10 +140,13 @@ function sb2.Process:initialize(frame, debugging)
 	self:log("Started.")
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
-	table.insert(sb2.Process.runningProcesses, self)
+	table.insert(sb2.Process.processList, self)
 end
 function sb2.Process:getStarter()
 	return self.starter
+end
+function sb2.Process:getHead()
+	return self.head
 end
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)
@@ -192,12 +230,19 @@ function sb2.Process:step()
 end
 function sb2.Process:halt(reason)
 	self.halted = reason or true
-	sb2.Process.processCounts[self.starter] = sb2.Process.processCounts[self.starter] - 1
+	
+	if self.starter then
+		local starterInfo = sb2.Process.starterInfo[self.starter]
+		starterInfo.processCount = starterInfo.processCount - 1
+		starterInfo.processes[self] = nil
+	end
 	
 	if self.halted == "TooManyProcesses" then
 		self:log("You have too many processes!")
 	elseif self.halted == "OutOfMemory" then
 		self:log("Ran out of memory.")
+	elseif self.halted == "StoppedManually" then
+		self:log("Stopped manually.")
 	elseif self.halted == true then
 		self:log("Finished normally.")
 	else
@@ -393,9 +438,23 @@ function sb2.Context:getHead()
 end
 
 
+minetest.register_on_joinplayer(function (player)
+	local name = player:get_player_name()
+	sb2.Process.starterInfo[name] = {
+		processes = {},
+		processCount = 0
+	}
+end)
+minetest.register_on_leaveplayer(function (player)
+	local name = player:get_player_name()
+	
+	sb2.Process:stopAllProcessesFor(name)
+	sb2.Process.starterInfo[name] = nil
+end)
+
 local i = 1
 minetest.register_globalstep(function ()
-	local processes = sb2.Process.runningProcesses
+	local processes = sb2.Process.processList
 	
 	while i <= math.min(#processes, maxSteps) do
 		local process = processes[i]

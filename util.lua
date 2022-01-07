@@ -31,3 +31,7 @@ end
 function sb2.log(level, message, ...)
 	minetest.log(level, string.format("[Scriptblocks 2] " .. message, ...))
 end
+
+function sb2.tellPlayer(player, message, ...)
+	minetest.chat_send_player(player, string.format("[Scriptblocks 2] " .. message, ...))
+end

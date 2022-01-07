@@ -241,7 +241,6 @@ end
 
 minetest.register_tool("scriptblocks2:runner", {
 	description = "Scriptblock Runner",
-	
 	_tt_help = "Starts a new scriptblocks process on the pointed block.",
 	
 	inventory_image = "sb2_runner.png",
@@ -257,10 +256,28 @@ minetest.register_tool("scriptblocks2:runner", {
 	end
 })
 
+minetest.register_tool("scriptblocks2:stopper", {
+	description = "Scriptblock Stopper",
+	_tt_help = "Stops all scriptblock processes that began on the pointed block.",
+	
+	inventory_image = "sb2_stopper.png",
+	
+	on_place = function (itemstack, placer, pointed_thing)
+		local name = placer:get_player_name()
+		local pos = pointed_thing.under
+		
+		local numStopped = sb2.Process:stopProcessesFor(name, pos)
+		
+		sb2.tellPlayer(name, "Stopped %d process%s.", numStopped, numStopped == 1 and "" or "es")
+	end
+})
+
 if unified_inventory then
-	unified_inventory.add_category_item("scriptblocks2", "scriptblocks2:runner")
 	unified_inventory.register_category("scriptblocks2", {
 		symbol = "scriptblocks2:say",
 		label = "Scriptblocks 2"
 	})
+	
+	unified_inventory.add_category_item("scriptblocks2", "scriptblocks2:runner")
+	unified_inventory.add_category_item("scriptblocks2", "scriptblocks2:stopper")
 end
