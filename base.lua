@@ -258,7 +258,7 @@ minetest.register_tool("scriptblocks2:runner", {
 
 minetest.register_tool("scriptblocks2:stopper", {
 	description = "Scriptblock Stopper",
-	_tt_help = "Stops all scriptblock processes that began on the pointed block.",
+	_tt_help = "Stops all your scriptblock processes that began on the pointed block.",
 	
 	inventory_image = "sb2_stopper.png",
 	
