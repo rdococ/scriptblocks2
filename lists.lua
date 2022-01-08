@@ -97,7 +97,7 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
 		continuation = "front",
-		action = function (pos, node, process, frame, context, item)
+		action = function (pos, node, process, frame, context, value)
 			local varname = minetest.get_meta(pos):get_string("varname")
 			local var = context:getVar(varname)
 			
@@ -106,7 +106,9 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 			if type(list) ~= "table" then return end
 			if not list.appendItem then return end
 			
-			list:appendItem(item)
+			if value == nil then return end
+			
+			list:appendItem(value)
 		end
 	}
 })
@@ -191,6 +193,8 @@ sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 			local index = list:asListIndex(index, true)
 			if not index then return end
 			
+			if value == nil then return end
+			
 			list:insertItem(index, value)
 		end
 	}
@@ -234,6 +238,8 @@ sb2.registerScriptblock("scriptblocks2:set_list_item", {
 			
 			local index = list:asListIndex(index)
 			if not index then return end
+			
+			if value == nil then return list:removeItem(index) end
 			
 			list:setItem(index, value)
 		end
