@@ -77,7 +77,7 @@ sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 			{"Front", "What to do next."},
 		},
 		additionalPoints = {
-			"You can only send a digiline message from a 'When I Receive Digiline Message' block!",
+			"You can only send a digiline message from processes you started!",
 		},
 	},
 	
@@ -89,7 +89,8 @@ sb2.registerScriptblock("scriptblocks2:send_digiline_message", {
 		arguments = {"left", "right"},
 		continuation = "front",
 		action = function (pos, node, process, frame, context, channel, message)
-			digilines.receptor_send(context:getHead(), digilines.rules.default, channel, sb2.toLuaValue(message))
+			if process:getStarter() ~= context:getOwner() then return end
+			digilines.receptor_send(process:getHead(), digilines.rules.default, channel, sb2.toLuaValue(message))
 		end
 	},
 })
