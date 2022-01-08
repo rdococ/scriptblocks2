@@ -84,6 +84,9 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 			{"Right", "The value of the item to append."},
 			{"Front", "What to do next."},
 		},
+		additionalPoints = {
+			"Nil values cannot be appended.",
+		},
 	},
 	
 	sb2_color = sb2.colors.lists,
@@ -167,6 +170,9 @@ sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 			{"Right", "The value of the item to insert."},
 			{"Front", "What to do next."},
 		},
+		additionalPoints = {
+			"Nil values cannot be inserted.",
+		},
 	},
 	
 	sb2_color = sb2.colors.lists,
@@ -212,6 +218,9 @@ sb2.registerScriptblock("scriptblocks2:set_list_item", {
 			{"Left", "The index of the list item to set."},
 			{"Right", "The new value of the item."},
 			{"Front", "What to do next."},
+		},
+		additionalPoints = {
+			"Setting an item to nil removes it from the list.",
 		},
 	},
 	
