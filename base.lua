@@ -129,16 +129,34 @@ function sb2.toSB2Value(value, record)
 	if type(value) ~= "table" then return value end
 	if record and record[value] then return record[value] end
 	
-	local dict = sb2.Dictionary:new()
-	
-	record = record or {}
-	record[value] = dict
-	
+	local isList = true
 	for k, v in pairs(value) do
-		dict:setEntry(sb2.toSB2Value(k, record), sb2.toSB2Value(v, record))
+		if type(k) ~= "number" or k ~= math.floor(k) then
+			isList = false
+			break
+		end
 	end
 	
-	return dict
+	record = record or {}
+	
+	local object
+	if isList then
+		object = sb2.List:new()
+		record[value] = object
+		
+		for k, v in ipairs(value) do
+			object:appendItem(sb2.toSB2Value(v, record))
+		end
+	else
+		object = sb2.Dictionary:new()
+		record[value] = object
+		
+		for k, v in pairs(value) do
+			object:setEntry(sb2.toSB2Value(k, record), sb2.toSB2Value(v, record))
+		end
+	end
+	
+	return object
 end
 function sb2.prettyPrint(value, ...)
 	if type(value) == "string" then return string.format("%q", value) end
