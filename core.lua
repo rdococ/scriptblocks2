@@ -36,7 +36,7 @@ Methods:
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	
 	queueEvent(event)
-		Queues an event in the process's event queue. Currently, events are unused, and the language model for passing events to processes is yet to be worked out.
+		Queues an event in the process's event queue. Currently, event queues are cleared at the end of each tick.
 	handleEvent(criteria(event))
 		Finds, pops and returns the first event that satisfies the given criterium function.
 	
@@ -73,6 +73,9 @@ Static methods:
 		Stops all processes attributed to the given username. Returns the number of processes stopped.
 	stopProcessesFor(starter, head)
 		Stops all processes attributed to the given username that began at the given location. Returns the number of processes stopped.
+	
+	queueEventAt(pos, event)
+		Queues an event for every process that began at that position.
 
 Node properties:
 	sb2_action(pos, node, process, frame, context)
@@ -102,6 +105,14 @@ function sb2.Process:stopProcessesFor(starter, head)
 		end
 	end
 	return n
+end
+
+function sb2.Process:queueEventAt(pos, event)
+	for _, process in pairs(sb2.Process.processList) do
+		if vector.equals(process:getHead(), pos) then
+			process:queueEvent(event)
+		end
+	end
 end
 
 function sb2.Process:initialize(frame, debugging)
