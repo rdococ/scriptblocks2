@@ -22,6 +22,7 @@ dofile(MP .. "/lists.lua")
 dofile(MP .. "/dictionaries.lua")
 loadfile(MP .. "/procedures.lua")(privateSB2)
 loadfile(MP .. "/closures.lua")(privateSB2)
+dofile(MP .. "/processes.lua")
 
 dofile(MP .. "/fun.lua")
 

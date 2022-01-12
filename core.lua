@@ -51,6 +51,8 @@ Methods:
 				This process was halted because it exceeded maxMemory.
 			"StoppedManually"
 				This process was stopped by external forces, such as a player using a Scriptblock Stopper.
+			"StoppedByOtherProcess"
+				This process was stopped by another process.
 			true
 				This process ended normally without any issues.
 	yield()
@@ -230,6 +232,7 @@ function sb2.Process:step()
 	end
 end
 function sb2.Process:halt(reason)
+	if self.halted then return end
 	self.halted = reason or true
 	
 	if self.starter then
@@ -244,6 +247,8 @@ function sb2.Process:halt(reason)
 		self:log("Ran out of memory.")
 	elseif self.halted == "StoppedManually" then
 		self:log("Stopped manually.")
+	elseif self.halted == "StoppedByOtherProcess" then
+		self:log("Stopped by other process.")
 	elseif self.halted == true then
 		self:log("Finished normally.")
 	else
@@ -256,7 +261,7 @@ function sb2.Process:yield()
 	self.yielding = true
 end
 function sb2.Process:isHalted()
-	return self.halted and true or false
+	return self.halted
 end
 function sb2.Process:isYielding()
 	return self.yielding
@@ -275,6 +280,9 @@ function sb2.Process:log(message, ...)
 		
 		minetest.chat_send_player(self.starter, string.format("[Process] " .. message, unpack(values)))
 	end
+end
+function sb2.Process:recordString(record)
+	return "<process>"
 end
 
 
@@ -456,14 +464,16 @@ end)
 local i = 1
 minetest.register_globalstep(function ()
 	local processes = sb2.Process.processList
+	local processCount = #processes
 	
-	while i <= math.min(#processes, maxSteps) do
+	while i <= math.min(processCount, maxSteps) do
 		local process = processes[i]
-		for _ = 1, math.max(math.floor(maxSteps / #processes), 1) do
+		for _ = 1, math.max(math.floor(maxSteps / processCount), 1) do
 			process:step()
 			if process:isHalted() then
 				table.remove(processes, i)
 				i = i - 1
+				processCount = processCount - 1
 				break
 			elseif process:isYielding() then
 				break
@@ -472,5 +482,5 @@ minetest.register_globalstep(function ()
 		
 		i = i + 1
 	end
-	if i > #processes then i = 1 end
+	if i > processCount then i = 1 end
 end)
