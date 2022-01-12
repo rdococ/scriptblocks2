@@ -66,7 +66,11 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		if frame:getArg("call") then
 			local meta = minetest.get_meta(pos)
 			
-			local procContext = sb2.Context:new(pos, meta:get_string("owner"))
+			local procContext = context:copy()
+			
+			procContext:setHead(pos)
+			procContext:setOwner(meta:get_string("owner"))
+			
 			procContext:declareVar(meta:get_string("parameter1"), frame:getArg(1))
 			procContext:declareVar(meta:get_string("parameter2"), frame:getArg(2))
 			
