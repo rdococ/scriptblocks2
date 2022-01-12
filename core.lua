@@ -417,7 +417,9 @@ Methods:
 	setOwner(owner)
 		Sets the owner blamed for building these scriptblocks.
 	getHead()
-		Gets the initial position of the current context.
+		Gets the initial position of the context.
+	setHead(head)
+		Sets the initial position of the context.
 ]]
 
 sb2.Context = sb2.registerClass("context")
@@ -446,6 +448,9 @@ function sb2.Context:setOwner(owner)
 end
 function sb2.Context:getHead()
 	return self.head
+end
+function sb2.Context:setHead(head)
+	self.head = head
 end
 
 
