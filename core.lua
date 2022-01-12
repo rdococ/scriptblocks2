@@ -6,9 +6,9 @@
 ]]
 
 local settings = minetest.settings
-local maxSteps = settings:get("scriptblocks2_max_steps") or 10000
-local maxMemory = settings:get("scriptblocks2_max_memory") or 100000
-local maxProcesses = settings:get("scriptblocks2_max_processes") or 500
+local maxSteps = tonumber(settings:get("scriptblocks2_max_steps")) or 10000
+local maxMemory = tonumber(settings:get("scriptblocks2_max_memory")) or 100000
+local maxProcesses = tonumber(settings:get("scriptblocks2_max_processes")) or 500
 
 --[[
 Process
