@@ -10,7 +10,7 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 * Custom, named procedures with up to 2 named parameters.
 * First-class lists, dictionaries, and closures with up to 1 named parameter.
 * Processes can persist for more than one tick.
-* Some mesecons and digilines support.
+* Ability to interface with digiline networks.
 
 This mod is an experiment to see what kind of fully-fledged programming language you can design using nodes. Some precautions have been taken to prevent server crashes, but they are not thoroughly tested. Use with care.
 
