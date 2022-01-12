@@ -118,9 +118,7 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 		
 		if processCount >= maxProcesses then
 			sb2.log("action", "%s could not start another process at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
-			self.halted = "TooManyProcesses"
-			
-			return
+			return self:halt("TooManyProcesses")
 		end
 		
 		starterInfo.processes[self] = true
@@ -238,8 +236,11 @@ function sb2.Process:halt(reason)
 	
 	if self.starter then
 		local starterInfo = sb2.Process.starterInfo[self.starter]
-		starterInfo.processCount = starterInfo.processCount - 1
-		starterInfo.processes[self] = nil
+		
+		if starterInfo.processes[self] then
+			starterInfo.processCount = starterInfo.processCount - 1
+			starterInfo.processes[self] = nil
+		end
 	end
 	
 	if self.halted == "TooManyProcesses" then
