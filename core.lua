@@ -467,21 +467,21 @@ minetest.register_globalstep(function ()
 	local processes = sb2.Process.processList
 	local processCount = #processes
 	
-	while i <= math.min(processCount, maxSteps) do
+	local step = 1
+	
+	while processCount > 0 and step <= maxSteps do
 		local process = processes[i]
-		for _ = 1, math.max(math.floor(maxSteps / processCount), 1) do
-			process:step()
-			if process:isHalted() then
-				table.remove(processes, i)
-				i = i - 1
-				processCount = processCount - 1
-				break
-			elseif process:isYielding() then
-				break
-			end
+		
+		process:step()
+		if process:isHalted() then
+			table.remove(processes, i)
+			i = i - 1
+			processCount = processCount - 1
 		end
 		
 		i = i + 1
+		if i > processCount then i = 1 end
+		
+		step = step + 1
 	end
-	if i > processCount then i = 1 end
 end)
