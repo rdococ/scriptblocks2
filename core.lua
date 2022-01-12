@@ -116,14 +116,15 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 		local starterInfo = sb2.Process.starterInfo[self.starter]
 		local processCount = starterInfo.processCount
 		
-		starterInfo.processes[self] = true
-		starterInfo.processCount = processCount + 1
-		
 		if processCount >= maxProcesses then
 			sb2.log("action", "%s could not start another process at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
-			self:halt("TooManyProcesses")
+			self.halted = "TooManyProcesses"
+			
 			return
 		end
+		
+		starterInfo.processes[self] = true
+		starterInfo.processCount = processCount + 1
 	end
 	
 	self.frame = frame
