@@ -469,14 +469,20 @@ minetest.register_globalstep(function ()
 	
 	local step = 1
 	
+	local yielders = {}
+	
 	while processCount > 0 and step <= maxSteps do
 		local process = processes[i]
 		
-		process:step()
-		if process:isHalted() then
-			table.remove(processes, i)
-			i = i - 1
-			processCount = processCount - 1
+		if not yielders[process] then
+			process:step()
+			if process:isHalted() then
+				table.remove(processes, i)
+				i = i - 1
+				processCount = processCount - 1
+			elseif process:isYielding() then
+				yielders[process] = true
+			end
 		end
 		
 		i = i + 1
