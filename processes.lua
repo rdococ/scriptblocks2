@@ -20,8 +20,6 @@ sb2.registerScriptblock("scriptblocks2:create_new_process", {
 	sb2_action = sb2.simple_action {
 		action = function (pos, node, process, frame, context)
 			local dirs = sb2.facedirToDirs(node.param2)
-			process:yield()
-			
 			return sb2.Process:new(sb2.Frame:new(vector.add(pos, dirs.right), frame:getContext()), process:getHead(), process:getStarter(), process:isDebugging())
 		end
 	},
