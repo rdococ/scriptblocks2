@@ -146,6 +146,9 @@ end
 function sb2.Process:getHead()
 	return self.head
 end
+function sb2.Process:isDebugging()
+	return self.debugging
+end
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)
 	self.frame = frame
