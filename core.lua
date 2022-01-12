@@ -27,6 +27,8 @@ Methods:
 		Gets the player that 'started' this process (i.e. the owner of the initial block of the entire process, not just the current procedure).
 	getHead()
 		Gets the 'head' of this process (the position of the block that this process started on).
+	isDebugging()
+		Returns true if debug information should be logged to the starter of the process.
 	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
