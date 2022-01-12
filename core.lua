@@ -35,11 +35,6 @@ Methods:
 	report(value)
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	
-	queueEvent(event)
-		Queues an event in the process's event queue. Currently, events are unused, and the language model for passing events to processes is yet to be worked out.
-	handleEvent(criteria(event))
-		Finds, pops and returns the first event that satisfies the given criterium function.
-	
 	step()
 		Performs one execution step.
 	
@@ -126,7 +121,6 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	end
 	
 	self.frame = frame
-	self.eventQueue = {}
 	
 	self.memoryScanner = sb2.RecursiveIterator:new(self)
 	
@@ -168,17 +162,6 @@ function sb2.Process:report(value)
 	end
 	self.frame = parent
 end
-function sb2.Process:queueEvent(event)
-	table.insert(self.eventQueue, event)
-end
-function sb2.Process:handleEvent(criteria)
-	for i, event in ipairs(self.eventQueue) do
-		if criteria(event) then
-			table.remove(self.eventQueue, i)
-			return event
-		end
-	end
-end
 function sb2.Process:step()
 	if self.halted then return end
 	self.yielding = false
@@ -203,10 +186,6 @@ function sb2.Process:step()
 		self:report(nil)
 	end
 	frame = self.frame
-	
-	for i = 1, #self.eventQueue do
-		table.remove(self.eventQueue, 1)
-	end
 	
 	if not self.halted then
 		local i = 1
