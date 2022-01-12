@@ -34,8 +34,8 @@ sb2.registerScriptblock("scriptblocks2:receive_mesecon_signal", {
 	mesecons = {
 		effector = {
 			action_on = function (pos, node)
-				local context = sb2.Context:new(pos, minetest.get_meta(pos):get_string("owner"))
-				sb2.Process:new(sb2.Frame:new(pos, context))
+				local owner = minetest.get_meta(pos):get_string("owner")
+				sb2.Process:new(sb2.Frame:new(pos, sb2.Context:new(pos, owner)), pos, owner)
 			end,
 			rules = mesecon.rules.alldirs,
 		},

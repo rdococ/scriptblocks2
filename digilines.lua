@@ -54,13 +54,15 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 		effector = {
 			action = function (pos, node, channel, message)
 				local meta = minetest.get_meta(pos)
+				
 				local setchan = meta:get_string("channel")
+				local owner = meta:get_string("owner")
 				
 				if channel == setchan then
-					local context = sb2.Context:new(pos, meta:get_string("owner"))
+					local context = sb2.Context:new(pos, owner)
 					context:declareVar("message", sb2.toSB2Value(message))
 					
-					sb2.Process:new(sb2.Frame:new(pos, context))
+					sb2.Process:new(sb2.Frame:new(pos, context), pos, owner)
 				end
 			end
 		}

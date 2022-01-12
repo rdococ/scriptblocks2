@@ -104,11 +104,9 @@ function sb2.Process:stopProcessesFor(starter, head)
 	return n
 end
 
-function sb2.Process:initialize(frame, debugging)
-	local context = frame:getContext()
-	
-	self.starter = context:getOwner()
-	self.head = context:getHead()
+function sb2.Process:initialize(frame, head, starter, debugging)
+	self.head = head
+	self.starter = starter
 	
 	self.debugging = debugging or false
 	
