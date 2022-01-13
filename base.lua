@@ -117,8 +117,9 @@ function sb2.toString(value, record)
 	return value:recordString(record or {}) or ""
 end
 function sb2.toNumber(value, default)
-	if type(value) ~= "table" or not value.toNumber then return tonumber(value) or default or 0 end
-	return value:toNumber() or default or 0
+	if default == nil then default = 0 end
+	if type(value) ~= "table" or not value.toNumber then return tonumber(value) or default end
+	return value:toNumber() or default
 end
 function sb2.toLuaValue(value, record)
 	if type(value) ~= "table" or not value.recordLuaValue then return value end
