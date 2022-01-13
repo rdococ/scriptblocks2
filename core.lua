@@ -30,6 +30,11 @@ Methods:
 	isDebugging()
 		Returns true if debug information should be logged to the starter of the process.
 	
+	getFrame()
+		Returns the process's current evaluation frame.
+	setFrame(frame)
+		Sets the process's current evaluation frame. This is equivalent to invoking a continuation.
+	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
 	replace(frame)
@@ -137,6 +142,7 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	
 	table.insert(sb2.Process.processList, self)
 end
+
 function sb2.Process:getStarter()
 	return self.starter
 end
@@ -145,6 +151,13 @@ function sb2.Process:getHead()
 end
 function sb2.Process:isDebugging()
 	return self.debugging
+end
+
+function sb2.Process:getFrame()
+	return self.frame
+end
+function sb2.Process:setFrame(frame)
+	self.frame = frame
 end
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)
@@ -164,6 +177,7 @@ function sb2.Process:report(value)
 	end
 	self.frame = parent
 end
+
 function sb2.Process:step()
 	if self.halted then return end
 	self.yielding = false
@@ -275,6 +289,9 @@ Frame
 A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps, or receive values reported from elsewhere.
 
 Methods:
+	copy()
+		Copies this frame recursively.
+	
 	getPos()
 		Returns the position of the node this frame is evaluating.
 	getContext()
@@ -322,6 +339,22 @@ function sb2.Frame:initialize(pos, context)
 	
 	self.requestedEmerge = false
 	self.emergeFailed = false
+end
+function sb2.Frame:copy()
+	local copy = self:getClass():new(self.pos, self.context)
+	
+	copy.parent = self.parent:copy()
+	copy.selectedArg = self.selectedArg
+	
+	for arg, _ in pairs(self.argsEvaluated) do
+		copy.arguments[arg] = self.arguments[arg]
+		copy.argsEvaluated[arg] = true
+	end
+	
+	copy.requestedEmerge = false
+	copy.emergeFailed = false
+	
+	return copy
 end
 function sb2.Frame:getPos()
 	return self.pos
