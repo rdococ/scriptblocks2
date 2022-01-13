@@ -156,7 +156,7 @@ sb2.registerScriptblock("scriptblocks2:less_than", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) < sb2.toNumber(b)
+			return sb2.toNumber(a, -math.huge) < sb2.toNumber(b, -math.huge)
 		end
 	}
 })
@@ -200,7 +200,7 @@ sb2.registerScriptblock("scriptblocks2:greater_than", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) > sb2.toNumber(b)
+			return sb2.toNumber(a, -math.huge) > sb2.toNumber(b, -math.huge)
 		end
 	}
 })
