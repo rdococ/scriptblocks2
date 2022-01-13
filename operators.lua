@@ -20,7 +20,7 @@ sb2.registerScriptblock("scriptblocks2:add", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) + sb2.toNumber(b)
+			return sb2.toNumber(a, 0) + sb2.toNumber(b, 0)
 		end
 	}
 })
@@ -42,7 +42,7 @@ sb2.registerScriptblock("scriptblocks2:subtract", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) - sb2.toNumber(b)
+			return sb2.toNumber(a, 0) - sb2.toNumber(b, 0)
 		end
 	}
 })
@@ -64,7 +64,7 @@ sb2.registerScriptblock("scriptblocks2:multiply", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) * sb2.toNumber(b)
+			return sb2.toNumber(a, 1) * sb2.toNumber(b, 1)
 		end
 	}
 })
@@ -86,7 +86,7 @@ sb2.registerScriptblock("scriptblocks2:divide", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) / sb2.toNumber(b)
+			return sb2.toNumber(a, 1) / sb2.toNumber(b, 1)
 		end
 	}
 })
@@ -111,7 +111,7 @@ sb2.registerScriptblock("scriptblocks2:modulo", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) % math.abs(sb2.toNumber(b))
+			return sb2.toNumber(a, 1) % math.abs(sb2.toNumber(b, 1))
 		end
 	}
 })
@@ -133,7 +133,7 @@ sb2.registerScriptblock("scriptblocks2:raise_to_power", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right", "front"},
 		action = function (pos, node, process, frame, context, a, b)
-			return sb2.toNumber(a) ^ sb2.toNumber(b)
+			return sb2.toNumber(a, 0) ^ sb2.toNumber(b, 1)
 		end
 	}
 })

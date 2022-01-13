@@ -44,9 +44,10 @@ Functions:
 			sb2_action(pos, node, process, frame, context)
 				The function called when this node is evaluated.
 		
-	toString(value, (record))/toNumber(value, (record))
+	toString(value, (record))/toNumber(value, (default))
 		Functions to convert values to strings or numbers. Guaranteed never to return nil. Use these instead of tostring and tonumber to follow the typing conventions of the language.
 		'record' is a table of converted values used to prevent recursion.
+		'default' is what value to use if none is provided.
 	toSB2Value(value, (record))/toLuaValue(value, (record))
 		Functions to convert values from SB2 values to Lua values and vice versa. toSB2Value creates dictionaries and thus depends on dictionaries.lua - digilines.lua needs to convert Lua values to SB2 values, and so also depends on dictionaries.lua. It may be a good idea to move it to a separate file.
 	prettyPrint(value, (record))
@@ -115,10 +116,9 @@ function sb2.toString(value, record)
 	if record and record[value] then return "..." end
 	return value:recordString(record or {}) or ""
 end
-function sb2.toNumber(value, record)
-	if type(value) ~= "table" or not value.recordNumber then return tonumber(value) or 0 end
-	if record and record[value] then return 0 end
-	return value:recordNumber(record or {}) or 0
+function sb2.toNumber(value, default)
+	if type(value) ~= "table" or not value.toNumber then return tonumber(value) or default or 0 end
+	return value:toNumber() or default or 0
 end
 function sb2.toLuaValue(value, record)
 	if type(value) ~= "table" or not value.recordLuaValue then return value end
