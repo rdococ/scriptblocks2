@@ -14,6 +14,14 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 
 This mod is an experiment to see what kind of fully-fledged programming language you can design using nodes. Some precautions have been taken to prevent server crashes, but they are not thoroughly tested. Use with care.
 
+# Experiments
+
+* First-class processes
+* First-class continuations
+* Introspective 'fun' blocks
+
+These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed at any time!
+
 # Examples
 
 This procedure calculates the factorial of a given number.
