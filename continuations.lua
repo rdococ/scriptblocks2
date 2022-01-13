@@ -11,6 +11,9 @@ end
 function sb2.Continuation:getFrame()
 	return self.frame
 end
+function sb2.Continuation:recordString(record)
+	return "<continuation>"
+end
 
 sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 	sb2_label = "Call With Continuation",
