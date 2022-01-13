@@ -20,7 +20,7 @@ This mod is an experiment to see what kind of fully-fledged programming language
 * First-class continuations
 * Introspective 'fun' blocks
 
-These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed at any time!
+These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed in the future!
 
 # Examples
 
