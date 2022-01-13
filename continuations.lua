@@ -1,4 +1,4 @@
-sb2.colors.continuations = "#888888"
+sb2.colors.continuations = "#fce762"
 
 sb2.Continuation = sb2.registerClass("continuation")
 
