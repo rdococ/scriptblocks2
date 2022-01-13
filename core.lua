@@ -286,11 +286,11 @@ end
 --[[
 Frame
 
-A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps, or receive values reported from elsewhere.
+A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps or receive values reported from elsewhere.
 
 Methods:
 	copy()
-		Copies this frame recursively.
+		Copies this frame recursively. The resulting frame can be restored with process:setFrame(), acting as a continuation.
 	
 	getPos()
 		Returns the position of the node this frame is evaluating.
