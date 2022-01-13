@@ -343,7 +343,7 @@ end
 function sb2.Frame:copy()
 	local copy = self:getClass():new(self.pos, self.context)
 	
-	copy.parent = self.parent:copy()
+	copy.parent = self.parent and self.parent:copy()
 	copy.selectedArg = self.selectedArg
 	
 	for arg, _ in pairs(self.argsEvaluated) do
