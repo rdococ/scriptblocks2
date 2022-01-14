@@ -340,10 +340,13 @@ function sb2.Frame:initialize(pos, context)
 	self.requestedEmerge = false
 	self.emergeFailed = false
 end
-function sb2.Frame:copy()
+function sb2.Frame:copy(slice)
 	local copy = self:getClass():new(self.pos, self.context)
 	
-	copy.parent = self.parent and self.parent:copy()
+	if self ~= slice then
+		copy.parent = self.parent and self.parent:copy(slice)
+	end
+	
 	copy.selectedArg = self.selectedArg
 	
 	for arg, _ in pairs(self.argsEvaluated) do
