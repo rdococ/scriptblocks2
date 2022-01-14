@@ -42,6 +42,7 @@ sb2.registerScriptblock("scriptblocks2:is_process_running", {
 	sb2_action = sb2.simple_action {
 		arguments = {"right"},
 		action = function (pos, node, process, frame, context, processToCheck)
+			if type(processToCheck) ~= "table" or not processToCheck.isHalted then return end
 			return not processToCheck:isHalted()
 		end
 	},
@@ -66,6 +67,7 @@ sb2.registerScriptblock("scriptblocks2:stop_process", {
 		arguments = {"right"},
 		continuation = "front",
 		action = function (pos, node, process, frame, context, processToStop)
+			if type(processToStop) ~= "table" or not processToStop.halt then return end
 			processToStop:halt("StoppedByOtherProcess")
 		end
 	},
