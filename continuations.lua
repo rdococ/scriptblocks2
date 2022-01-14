@@ -18,6 +18,17 @@ end
 sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 	sb2_label = "Call With Continuation",
 	
+	sb2_explanation = {
+		shortExplanation = "Calls a closure, passing this block's continuation to it.",
+		inputSlots = {
+			{"Right", "The closure to call."},
+		},
+		additionalPoints = {
+			"This block calls a closure, passing a special 'continuation' value to it.",
+			"When this 'continuation' is invoked, the program jumps back to this point."
+		}
+	},
+	
 	sb2_color = sb2.colors.continuations,
 	sb2_icon  = "sb2_icon_call_with_continuation.png",
 	sb2_slotted_faces = {"right"},
@@ -50,6 +61,14 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 
 sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 	sb2_label = "Invoke Continuation",
+	
+	sb2_explanation = {
+		shortExplanation = "Jumps to the point in the program specified by the continuation.",
+		inputSlots = {
+			{"Front", "The continuation to invoke."},
+			{"Right", "The value to invoke the continuation with."}
+		},
+	},
 	
 	sb2_color = sb2.colors.continuations,
 	sb2_icon  = "sb2_icon_invoke_continuation.png",
