@@ -196,7 +196,7 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if not closure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.getPos then return process:report(nil) end
 		
 		local funcPos = closure:getPos()
 		if not funcPos then return process:report(nil) end
@@ -240,7 +240,7 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local closure = frame:getArg("closure")
-			if not closure then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if type(closure) ~= "table" or not closure.getPos then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
 			local funcPos = closure:getPos()
 			if not funcPos then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
