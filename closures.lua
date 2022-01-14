@@ -126,7 +126,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			sb2.closures[id] = funcDef
 		end
 		
-		if not vector.equals(pos, funcDef.pos) then
+		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
 			funcDef.pos = pos
 			
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
@@ -163,7 +163,14 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			return process:replace(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
 		else
 			local id = meta:get_string("id")
-			return process:report(sb2.Closure:new(id, context))
+			local closure = sb2.Closure:new(id, context)
+			
+			if not closure:getPos() or not vector.equals(closure:getPos(), pos) then
+				sb2.closures[id] = sb2.closures[id] or {}
+				sb2.closures[id].pos = pos
+			end
+			
+			return process:report(closure)
 		end
 	end,
 })
