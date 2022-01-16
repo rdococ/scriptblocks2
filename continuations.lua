@@ -53,17 +53,9 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.getPos then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.tailCall then return process:report(nil) end
 		
-		local funcPos = closure:getPos()
-		if not funcPos then return process:report(nil) end
-		
-		local funcFrame = sb2.Frame:new(funcPos, context)
-		
-		funcFrame:setArg("call", closure)
-		funcFrame:setArg(1, sb2.Continuation:new(frame:getParent()))
-		
-		return process:replace(funcFrame)
+		return closure:tailCall(process, sb2.Continuation:new(frame:getParent()))
 	end
 })
 
