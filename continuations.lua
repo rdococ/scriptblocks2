@@ -3,9 +3,7 @@ sb2.colors.continuations = "#fce762"
 sb2.Continuation = sb2.registerClass("continuation")
 
 function sb2.Continuation:initialize(frame)
-	local frame = frame:copy()
-	frame:selectArg("invoke")
-	
+	local frame = frame and frame:copy()
 	self.frame = frame
 end
 function sb2.Continuation:getFrame()
@@ -36,9 +34,6 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
-		if frame:isArgEvaluated("invoke") then
-			return process:report(frame:getArg("invoke"))
-		end
 		if not frame:isArgEvaluated("closure") then
 			frame:selectArg("closure")
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
@@ -53,7 +48,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		local funcFrame = sb2.Frame:new(funcPos, context)
 		
 		funcFrame:setArg("call", closure)
-		funcFrame:setArg(1, sb2.Continuation:new(frame))
+		funcFrame:setArg(1, sb2.Continuation:new(frame:getParent()))
 		
 		return process:replace(funcFrame)
 	end
@@ -90,8 +85,12 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 		if type(continuation) ~= "table" then return process:halt() end
 		if not continuation.getFrame then return process:halt() end
 		
-		local contFrame = continuation:getFrame():copy()
-		contFrame:receiveArg(frame:getArg("value"))
+		local contFrame = continuation:getFrame()
+		contFrame = contFrame and contFrame:copy()
+		
+		if contFrame then
+			contFrame:receiveArg(frame:getArg("value"))
+		end
 		
 		return process:setFrame(contFrame)
 	end
