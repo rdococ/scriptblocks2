@@ -24,10 +24,9 @@ Methods:
 		The value should not be nil.
 	
 	asListIndex(index, extendedRange)
-		Converts the value to a valid list index, or nil if there is no sensible way to do so.
-		If extendedRange is true, the index can exceed the list's size by one item. This is used for insertItem, where inserting an item at the n+1th position in a list is equivalent to appending it to the end of the list.
+		Converts the value to a valid list index, or nil if there is no sensible way to do so. You don't need to call this, the other methods do so automatically.
 
-If you are looking to extend scriptblocks2, you can register classes with definitions for these methods. The corresponding scriptblocks check for the presence of these methods and will call them if it can find them. Generally, however, it's better to define your own blocks for new data types!
+If you are looking to extend scriptblocks2, you can register classes with definitions for these methods. The corresponding scriptblocks check for the presence of these methods and will call them if it can find them.
 ]]
 
 sb2.List = sb2.registerClass("list")
@@ -35,22 +34,41 @@ sb2.List = sb2.registerClass("list")
 function sb2.List:initialize()
 	self.items = {}
 end
+
 function sb2.List:getSize()
 	return #self.items
 end
 function sb2.List:getItem(index)
+	index = self:asListIndex(index, false)
+	if not index then return end
+	
 	return self.items[index]
 end
 function sb2.List:setItem(index, value)
+	if value == nil then return self:removeItem(index) end
+	
+	index = self:asListIndex(index, false)
+	if not index then return end
+	
 	self.items[index] = value
 end
 function sb2.List:insertItem(index, value)
+	if value == nil then return end
+	
+	index = self:asListIndex(index, true)
+	if not index then return end
+	
 	table.insert(self.items, index, value)
 end
 function sb2.List:removeItem(index)
+	index = self:asListIndex(index, false)
+	if not index then return end
+	
 	table.remove(self.items, index)
 end
 function sb2.List:appendItem(value)
+	if value == nil then return end
+	
 	table.insert(self.items, value)
 end
 function sb2.List:asListIndex(index, extendedRange)
@@ -59,6 +77,7 @@ function sb2.List:asListIndex(index, extendedRange)
 	if index >= #self.items + (extendedRange and 1.5 or 0.5) then return end
 	return math.ceil(index - 0.5)
 end
+
 function sb2.List:recordString(record)
 	record[self] = true
 	
@@ -139,8 +158,6 @@ sb2.registerScriptblock("scriptblocks2:append_to_list", {
 			if type(list) ~= "table" then return end
 			if not list.appendItem then return end
 			
-			if value == nil then return end
-			
 			list:appendItem(value)
 		end
 	}
@@ -178,10 +195,6 @@ sb2.registerScriptblock("scriptblocks2:remove_from_list", {
 			
 			if type(list) ~= "table" then return end
 			if not list.removeItem then return end
-			if not list.asListIndex then return end
-			
-			local index = list:asListIndex(index)
-			if not index then return end
 			
 			list:removeItem(index)
 		end
@@ -224,12 +237,6 @@ sb2.registerScriptblock("scriptblocks2:insert_into_list", {
 			
 			if type(list) ~= "table" then return end
 			if not list.insertItem then return end
-			if not list.asListIndex then return end
-			
-			local index = list:asListIndex(index, true)
-			if not index then return end
-			
-			if value == nil then return end
 			
 			list:insertItem(index, value)
 		end
@@ -272,13 +279,7 @@ sb2.registerScriptblock("scriptblocks2:set_list_item", {
 			local list = var and var.value
 			
 			if type(list) ~= "table" then return end
-			if not list.insertItem then return end
-			if not list.asListIndex then return end
-			
-			local index = list:asListIndex(index)
-			if not index then return end
-			
-			if value == nil then return list:removeItem(index) end
+			if not list.setItem then return end
 			
 			list:setItem(index, value)
 		end
@@ -315,10 +316,6 @@ sb2.registerScriptblock("scriptblocks2:get_list_item", {
 			
 			if type(list) ~= "table" then return end
 			if not list.getItem then return end
-			if not list.asListIndex then return end
-			
-			local index = list:asListIndex(index)
-			if not index then return end
 			
 			return list:getItem(index)
 		end

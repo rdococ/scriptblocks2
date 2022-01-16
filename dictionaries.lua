@@ -28,8 +28,11 @@ function sb2.Dictionary:getEntry(index)
 	return self.entries[index]
 end
 function sb2.Dictionary:setEntry(index, value)
+	if index == nil then return end
+	
 	if self.entries[index] ~= nil then self.size = self.size - 1 end
 	if value ~= nil then self.size = self.size + 1 end
+	
 	self.entries[index] = value
 end
 function sb2.Dictionary:getSize()
@@ -113,8 +116,6 @@ sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 			if type(dict) ~= "table" then return end
 			if not dict.setEntry then return end
 			
-			if index == nil then return end
-			
 			dict:setEntry(index, value)
 		end
 	}
@@ -150,8 +151,6 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 			
 			if type(dict) ~= "table" then return end
 			if not dict.getEntry then return end
-			
-			if index == nil then return end
 			
 			return dict:getEntry(index)
 		end
