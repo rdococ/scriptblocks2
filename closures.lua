@@ -17,7 +17,7 @@ function sb2.Closure:getContext()
 	return self.context
 end
 
-function sb2.Closure:call(process, arg)
+function sb2.Closure:callClosure(process, arg)
 	local pos = self:getPos()
 	if not pos then return process:getFrame():receiveArg(nil) end
 	
@@ -28,7 +28,7 @@ function sb2.Closure:call(process, arg)
 	
 	return process:push(frame)
 end
-function sb2.Closure:tailCall(process, arg)
+function sb2.Closure:tailCallClosure(process, arg)
 	local pos = self:getPos()
 	if not pos then return process:report(nil) end
 	
@@ -228,9 +228,9 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.tailCall then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
 		
-		return closure:tailCall(process, frame:getArg(1))
+		return closure:tailCallClosure(process, frame:getArg(1))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:run_closure", {
@@ -264,9 +264,9 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local closure = frame:getArg("closure")
-			if type(closure) ~= "table" or not closure.call then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if type(closure) ~= "table" or not closure.callClosure then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
-			return closure:call(process, frame:getArg(1))
+			return closure:callClosure(process, frame:getArg(1))
 		end
 		
 		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))

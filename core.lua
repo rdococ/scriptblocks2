@@ -166,9 +166,9 @@ function sb2.Process:replace(frame)
 	self.frame = frame
 end
 function sb2.Process:report(value)
-	return self:reportTo(self.frame:getParent(), value)
+	return self:continue(self.frame:getParent(), value)
 end
-function sb2.Process:reportTo(frame, value)
+function sb2.Process:continue(frame, value)
 	if frame then
 		frame:receiveArg(value)
 	else

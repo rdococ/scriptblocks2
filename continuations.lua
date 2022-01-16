@@ -11,7 +11,7 @@ function sb2.Continuation:getFrame()
 	return self.frame
 end
 
-function sb2.Continuation:continue(process, arg)
+function sb2.Continuation:invokeContinuation(process, arg)
 	local frame = self:getFrame()
 	frame = frame and frame:copy()
 	
@@ -19,7 +19,7 @@ function sb2.Continuation:continue(process, arg)
 		frame:receiveArg(arg)
 	end
 	
-	return process:reportTo(frame, arg)
+	return process:continue(frame, arg)
 end
 
 function sb2.Continuation:recordString(record)
@@ -53,9 +53,9 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.tailCall then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
 		
-		return closure:tailCall(process, sb2.Continuation:new(frame:getParent()))
+		return closure:tailCallClosure(process, sb2.Continuation:new(frame:getParent()))
 	end
 })
 
@@ -87,8 +87,8 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 		end
 		
 		local continuation = frame:getArg("continuation")
-		if type(continuation) ~= "table" or not continuation.continue then return process:halt() end
+		if type(continuation) ~= "table" or not continuation.invokeContinuation then return process:halt() end
 		
-		return continuation:continue(process, frame:getArg(1))
+		return continuation:invokeContinuation(process, frame:getArg(1))
 	end
 })
