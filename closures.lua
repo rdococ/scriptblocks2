@@ -1,7 +1,7 @@
 sb2.colors.closures = "#c1c1c1"
 
 local modStorage = (...).modStorage
-sb2.closures = minetest.deserialize(modStorage:get_string("closures")) or minetest.deserialize(modStorage:get_string("functions")) or {}
+sb2.closureList = minetest.deserialize(modStorage:get_string("closures")) or minetest.deserialize(modStorage:get_string("functions")) or {}
 
 sb2.Closure = sb2.registerClass("closure")
 
@@ -11,7 +11,7 @@ function sb2.Closure:initialize(id, context)
 end
 
 function sb2.Closure:getPos()
-	return sb2.closures[self.id] and sb2.closures[self.id].pos
+	return sb2.closureList[self.id] and sb2.closureList[self.id].pos
 end
 function sb2.Closure:getContext()
 	return self.context
@@ -82,12 +82,12 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if itemId ~= "" then
 			id = itemId
 			
-			if sb2.closures[id] then
+			if sb2.closureList[id] then
 				if placerName then
 					minetest.chat_send_player(placerName, "This closure has already been placed. Creating a new closure.")
 				end
 				
-				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.closures[id].pos))
+				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.closureList[id].pos))
 			end
 			
 			local parameter = itemMeta:get_string("parameter")
@@ -97,7 +97,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		end
 		
 		local attempts = 0
-		while (not id or sb2.closures[id]) and attempts <= 10000 do
+		while (not id or sb2.closureList[id]) and attempts <= 10000 do
 			id = sb2.generateUUID()
 			attempts = attempts + 1
 		end
@@ -123,13 +123,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName or "(unknown)", meta:get_string("parameter")))
 		
-		sb2.closures[id] = {pos = pos}
+		sb2.closureList[id] = {pos = pos}
 	end,
 	on_destruct = function (pos)
 		local id = minetest.get_meta(pos):get_string("id")
 		if id ~= "" then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
-			sb2.closures[id] = nil
+			sb2.closureList[id] = nil
 		end
 	end,
 	
@@ -145,10 +145,10 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		if id == "" then return end
 		
-		local funcDef = sb2.closures[id]
+		local funcDef = sb2.closureList[id]
 		if not funcDef then
 			funcDef = {pos = pos}
-			sb2.closures[id] = funcDef
+			sb2.closureList[id] = funcDef
 		end
 		
 		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
@@ -191,8 +191,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			local closure = sb2.Closure:new(id, context)
 			
 			if not closure:getPos() or not vector.equals(closure:getPos(), pos) then
-				sb2.closures[id] = sb2.closures[id] or {}
-				sb2.closures[id].pos = pos
+				sb2.closureList[id] = sb2.closureList[id] or {}
+				sb2.closureList[id].pos = pos
 			end
 			
 			return process:report(closure)
@@ -278,12 +278,12 @@ minetest.register_globalstep(function (dt)
 	t = t + dt
 	
 	if t > 60 then
-		modStorage:set_string("closures", minetest.serialize(sb2.closures))
+		modStorage:set_string("closures", minetest.serialize(sb2.closureList))
 		t = 0
 	end
 end)
 
 minetest.register_on_shutdown(function ()
 	modStorage:set_string("functions", "")
-	modStorage:set_string("closures", minetest.serialize(sb2.closures))
+	modStorage:set_string("closures", minetest.serialize(sb2.closureList))
 end)
