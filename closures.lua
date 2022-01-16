@@ -9,12 +9,37 @@ function sb2.Closure:initialize(id, context)
 	self.id = id
 	self.context = context:copy()
 end
+
 function sb2.Closure:getPos()
 	return sb2.closures[self.id] and sb2.closures[self.id].pos
 end
 function sb2.Closure:getContext()
 	return self.context
 end
+
+function sb2.Closure:call(process, arg)
+	local pos = self:getPos()
+	if not pos then return process:getFrame():receiveArg(nil) end
+	
+	local frame = sb2.Frame:new(pos, process:getFrame():getContext())
+	
+	frame:setArg("call", self)
+	frame:setArg(1, arg)
+	
+	return process:push(frame)
+end
+function sb2.Closure:tailCall(process, arg)
+	local pos = self:getPos()
+	if not pos then return process:report(nil) end
+	
+	local frame = sb2.Frame:new(pos, process:getFrame():getContext())
+	
+	frame:setArg("call", self)
+	frame:setArg(1, arg)
+	
+	return process:replace(frame)
+end
+
 function sb2.Closure:recordString(record)
 	return "<closure>"
 end
@@ -203,17 +228,9 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.getPos then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.tailCall then return process:report(nil) end
 		
-		local funcPos = closure:getPos()
-		if not funcPos then return process:report(nil) end
-		
-		local funcFrame = sb2.Frame:new(funcPos, context)
-		
-		funcFrame:setArg("call", closure)
-		funcFrame:setArg(1, frame:getArg(1))
-		
-		return process:replace(funcFrame)
+		return closure:tailCall(process, frame:getArg(1))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:run_closure", {
@@ -247,17 +264,9 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local closure = frame:getArg("closure")
-			if type(closure) ~= "table" or not closure.getPos then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if type(closure) ~= "table" or not closure.call then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
-			local funcPos = closure:getPos()
-			if not funcPos then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
-			
-			local funcFrame = sb2.Frame:new(funcPos, context)
-			
-			funcFrame:setArg("call", closure)
-			funcFrame:setArg(1, frame:getArg(1))
-			
-			return process:push(funcFrame)
+			return closure:call(process, frame:getArg(1))
 		end
 		
 		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
