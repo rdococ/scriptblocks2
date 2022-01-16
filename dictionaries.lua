@@ -1,5 +1,23 @@
 sb2.colors.dictionaries = "#40e5c1"
 
+--[[
+Dictionary
+
+A dictionary is like a Lua table; it maps non-nil values to other non-nil values.
+
+Methods:
+	getSize()
+		Returns the number of entries in the dictionary.
+	
+	getEntry(index)
+		Gets the entry with the specified key.
+	setEntry(index, value)
+		Sets the entry with the specified key to the specified value.
+		If the entry didn't exist, it is created. If the value is nil, the entry is removed.
+
+If you are looking to extend scriptblocks2, you can register classes with definitions for these methods. The corresponding scriptblocks check for the presence of these methods and will call them if it can find them.
+]]
+
 sb2.Dictionary = sb2.registerClass("dictionary")
 
 function sb2.Dictionary:initialize()

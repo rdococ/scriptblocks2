@@ -1,5 +1,25 @@
 sb2.colors.continuations = "#fce762"
 
+--[[
+Continuation
+
+A continuation is a value that represents a point in the execution of a scriptblocks2 process. In many ways, it is a sort of first-class GOTO label - invoking the continuation will 'jump' to another location without any guarantee of control returning.
+
+Constructor:
+	new(frame)
+		Creates a new continuation for the given frame. When the continuation is invoked, a copy of this frame will receive the argument passed to the continuation. The frame is copied during initialization, so the original can continue execution without altering the behaviour of the continuation.
+
+Methods:
+	getFrame()
+		Returns the frame this closure represents. The frame has a parent, with a parent, etc. up until the start of the call stack.
+	
+	invokeContinuation(process, arg)
+		Invokes this continuation. This replaces the entire call stack with a copy of the continuation's frame.
+
+If you are looking to extend scriptblocks2, you can register classes with their own invokeContinuation method. The 'invoke continuation' block will automatically detect the presence of the method and run it when it encounters your custom data type.
+invokeContinuation should not report back to the frame that called it.
+]]
+
 sb2.Continuation = sb2.registerClass("continuation")
 
 function sb2.Continuation:initialize(frame)

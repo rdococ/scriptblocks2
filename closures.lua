@@ -3,6 +3,29 @@ sb2.colors.closures = "#c1c1c1"
 local modStorage = (...).modStorage
 sb2.closureList = minetest.deserialize(modStorage:get_string("closures")) or minetest.deserialize(modStorage:get_string("functions")) or {}
 
+--[[
+Closure
+
+A closure is a value that represents an anonymous procedure along with an environment. Closures store their context, containing the variables they can access, and their ID, representing the definition of the anonymous procedure.
+
+Constructor:
+	new(id, context)
+		Creates a new closure with the given closure body ID and context
+
+Methods:
+	getPos()
+		Returns the position where this closure's body is defined.
+	getContext()
+		Returns the context, consisting of variables from this closure's lexical scope.
+	
+	callClosure(process, arg)
+		Performs a closure call. This generally pushes a new frame to the process's stack to evaluate the closure's body.
+	tailCallClosure(process, arg)
+		Performs a closure tail call. This replaces the current frame with a new one.
+
+If you are looking to extend scriptblocks2, you can register classes with their own callClosure/tailCallClosure methods and the 'run'/'call' blocks will automatically detect the presence of the method and run it when they encounter your custom data type.
+]]
+
 sb2.Closure = sb2.registerClass("closure")
 
 function sb2.Closure:initialize(id, context)

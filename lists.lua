@@ -1,5 +1,35 @@
 sb2.colors.lists = "#ce421e"
 
+--[[
+List
+
+A list is a contiguous list of non-nil values.
+
+Methods:
+	getSize()
+		Returns the number of items in the list.
+	
+	getItem(index)
+		Returns the item at this index in the list.
+	setItem(index, value)
+		Sets an item at this index in the list to a new value.
+		This value should never be nil. When the 'set item' scriptblock receives a nil value, it calls removeItem instead.
+	insertItem(index, value)
+		Inserts an item at this index in the list.
+		The value should never be nil. 'insert item' will do nothing if it receives a nil value.
+	removeItem(index)
+		Removes an item at this index in the list.
+	appendItem(value)
+		Appends an item to the list.
+		The value should not be nil.
+	
+	asListIndex(index, extendedRange)
+		Converts the value to a valid list index, or nil if there is no sensible way to do so.
+		If extendedRange is true, the index can exceed the list's size by one item. This is used for insertItem, where inserting an item at the n+1th position in a list is equivalent to appending it to the end of the list.
+
+If you are looking to extend scriptblocks2, you can register classes with definitions for these methods. The corresponding scriptblocks check for the presence of these methods and will call them if it can find them. Generally, however, it's better to define your own blocks for new data types!
+]]
+
 sb2.List = sb2.registerClass("list")
 
 function sb2.List:initialize()

@@ -32,8 +32,6 @@ Methods:
 	
 	getFrame()
 		Returns the process's current evaluation frame.
-	setFrame(frame)
-		Sets the process's current evaluation frame. This is equivalent to invoking a continuation.
 	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
@@ -41,6 +39,8 @@ Methods:
 		Replaces the topmost frame with a new one; i.e. the new frame replaces the current frame completely. This is equivalent to a tail-recursive call.
 	report(value)
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
+	continue(frame, value)
+		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
 	
 	step()
 		Performs one execution step.
