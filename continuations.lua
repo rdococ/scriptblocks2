@@ -6,9 +6,22 @@ function sb2.Continuation:initialize(frame)
 	local frame = frame and frame:copy()
 	self.frame = frame
 end
+
 function sb2.Continuation:getFrame()
 	return self.frame
 end
+
+function sb2.Continuation:continue(process, arg)
+	local frame = self:getFrame()
+	frame = frame and frame:copy()
+	
+	if frame then
+		frame:receiveArg(arg)
+	end
+	
+	return process:setFrame(frame)
+end
+
 function sb2.Continuation:recordString(record)
 	return "<continuation>"
 end
@@ -76,22 +89,14 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 			frame:selectArg("continuation")
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		end
-		if not frame:isArgEvaluated("value") then
-			frame:selectArg("value")
+		if not frame:isArgEvaluated(1) then
+			frame:selectArg(1)
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		
 		local continuation = frame:getArg("continuation")
-		if type(continuation) ~= "table" then return process:halt() end
-		if not continuation.getFrame then return process:halt() end
+		if type(continuation) ~= "table" or not continuation.continue then return process:halt() end
 		
-		local contFrame = continuation:getFrame()
-		contFrame = contFrame and contFrame:copy()
-		
-		if contFrame then
-			contFrame:receiveArg(frame:getArg("value"))
-		end
-		
-		return process:setFrame(contFrame)
+		return continuation:continue(process, frame:getArg(1))
 	end
 })
