@@ -19,7 +19,7 @@ function sb2.Continuation:continue(process, arg)
 		frame:receiveArg(arg)
 	end
 	
-	return process:setFrame(frame)
+	return process:reportTo(frame, arg)
 end
 
 function sb2.Continuation:recordString(record)

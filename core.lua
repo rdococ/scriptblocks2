@@ -156,9 +156,7 @@ end
 function sb2.Process:getFrame()
 	return self.frame
 end
-function sb2.Process:setFrame(frame)
-	self.frame = frame
-end
+
 function sb2.Process:push(frame)
 	frame:setParent(self.frame)
 	self.frame = frame
@@ -168,14 +166,17 @@ function sb2.Process:replace(frame)
 	self.frame = frame
 end
 function sb2.Process:report(value)
-	local parent = self.frame:getParent()
-	if parent then
-		parent:receiveArg(value)
+	return self:reportTo(self.frame:getParent(), value)
+end
+function sb2.Process:reportTo(frame, value)
+	if frame then
+		frame:receiveArg(value)
 	else
 		self:log("Reported: %s", {prettyprint = true, value = value})
 		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
 	end
-	self.frame = parent
+	
+	self.frame = frame
 end
 
 function sb2.Process:step()
