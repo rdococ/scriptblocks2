@@ -3,15 +3,15 @@ sb2.colors.dictionaries = "#40e5c1"
 --[[
 Dictionary
 
-A dictionary is like a Lua table; it maps non-nil values to other non-nil values.
+A dictionary is much like a Lua table - it maps non-nil values to other non-nil values.
 
 Methods:
 	getSize()
 		Returns the number of entries in the dictionary.
 	
-	getEntry(index)
+	getItem(key)
 		Gets the entry with the specified key.
-	setEntry(index, value)
+	setItem(key, value)
 		Sets the entry with the specified key to the specified value.
 		If the entry didn't exist, it is created. If the value is nil, the entry is removed.
 
@@ -24,20 +24,22 @@ function sb2.Dictionary:initialize()
 	self.entries = {}
 	self.size = 0
 end
-function sb2.Dictionary:getEntry(index)
-	return self.entries[index]
+
+function sb2.Dictionary:getItem(key)
+	return self.entries[key]
 end
-function sb2.Dictionary:setEntry(index, value)
-	if index == nil then return end
+function sb2.Dictionary:setEntry(key, value)
+	if key == nil then return end
 	
-	if self.entries[index] ~= nil then self.size = self.size - 1 end
+	if self.entries[key] ~= nil then self.size = self.size - 1 end
 	if value ~= nil then self.size = self.size + 1 end
 	
-	self.entries[index] = value
+	self.entries[key] = value
 end
 function sb2.Dictionary:getSize()
 	return self.size
 end
+
 function sb2.Dictionary:recordString(record)
 	record[self] = true
 	
@@ -114,9 +116,9 @@ sb2.registerScriptblock("scriptblocks2:set_dictionary_entry", {
 			local dict = var and var.value
 			
 			if type(dict) ~= "table" then return end
-			if not dict.setEntry then return end
+			if not dict.setItem then return end
 			
-			dict:setEntry(index, value)
+			dict:setItem(index, value)
 		end
 	}
 })
@@ -150,9 +152,9 @@ sb2.registerScriptblock("scriptblocks2:get_dictionary_entry", {
 			local dict = var and var.value
 			
 			if type(dict) ~= "table" then return end
-			if not dict.getEntry then return end
+			if not dict.getItem then return end
 			
-			return dict:getEntry(index)
+			return dict:getItem(index)
 		end
 	}
 })
