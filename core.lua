@@ -41,6 +41,8 @@ Methods:
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	continue(frame, value)
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
+	unwind(marker, value)
+		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *includes* the marked frame. This is like throwing an exception. If the unwound slice is pushed onto the stack in its entirety, that's like invoking a delimited continuation.
 	
 	step()
 		Performs one execution step.
@@ -178,6 +180,22 @@ function sb2.Process:continue(frame, value)
 	
 	self.frame = frame
 end
+function sb2.Process:unwind(marker, value)
+	local slice, markedFrame = self.frame, self.frame
+	
+	while markedFrame and markedFrame:getMarker() ~= marker do
+		markedFrame = markedFrame:getParent()
+	end
+	
+	if markedFrame then
+		self:continue(markedFrame:getParent(), value)
+		markedFrame:setParent(nil)
+	else
+		self:continue(nil, value)
+	end
+	
+	return slice
+end
 
 function sb2.Process:step()
 	if self.halted then return end
@@ -226,6 +244,7 @@ function sb2.Process:step()
 		end
 	end
 end
+
 function sb2.Process:halt(reason)
 	if self.halted then return end
 	self.halted = reason or true
@@ -267,6 +286,7 @@ end
 function sb2.Process:getHaltingReason()
 	return self.halted or nil
 end
+
 function sb2.Process:log(message, ...)
 	if self.debugging then
 		local values = {...}
@@ -279,6 +299,7 @@ function sb2.Process:log(message, ...)
 		minetest.chat_send_player(self.starter, string.format("[Process] " .. message, unpack(values)))
 	end
 end
+
 function sb2.Process:recordString(record)
 	return "<process>"
 end
@@ -316,6 +337,11 @@ Methods:
 	receiveArg(value)
 		Receives a value, storing it in the selected argument and marking it as evaluated.
 	
+	getMarker()
+		Returns the frame's unwinding marker.
+	setMarker(marker)
+		Sets this frame's unwinding marker. If Process:unwind(marker, value) is called, that value will automatically be reported to this frame's parent (not this frame itself).
+	
 	requestNode()
 		Attempts to emerge the node at this frame's position.
 		Return values:
@@ -338,6 +364,8 @@ function sb2.Frame:initialize(pos, context)
 	self.argsEvaluated = {}
 	self.selectedArg = nil
 	
+	self.marker = nil
+	
 	self.requestedEmerge = false
 	self.emergeFailed = false
 end
@@ -354,6 +382,8 @@ function sb2.Frame:copy(slice)
 		copy.arguments[arg] = self.arguments[arg]
 		copy.argsEvaluated[arg] = true
 	end
+	
+	copy.marker = self.marker
 	
 	copy.requestedEmerge = false
 	copy.emergeFailed = false
@@ -392,6 +422,14 @@ function sb2.Frame:receiveArg(value)
 	self.arguments[self.selectedArg] = value
 	self.argsEvaluated[self.selectedArg] = true
 end
+
+function sb2.Frame:getMarker()
+	return self.marker
+end
+function sb2.Frame:setMarker(marker)
+	self.marker = marker
+end
+
 function sb2.Frame:requestNode()
 	local pos = self.pos
 	local node = minetest.get_node(pos)
