@@ -42,9 +42,12 @@ end
 
 function sb2.Closure:callClosure(process, arg)
 	local pos = self:getPos()
-	if not pos then return process:getFrame():receiveArg(nil) end
+	if not pos then return process:continue(process:getFrame(), nil) end
 	
-	local frame = sb2.Frame:new(pos, process:getFrame():getContext())
+	local context = process:getFrame()
+	context = context and context:getContext() or sb2.Context:new()
+	
+	local frame = sb2.Frame:new(pos, context)
 	
 	frame:setArg("call", self)
 	frame:setArg(1, arg)
