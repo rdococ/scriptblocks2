@@ -44,8 +44,8 @@ Methods:
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
-	unwind(marker, value)
-		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+	unwind(criteria, value)
+		Unwinds the call stack until a frame whose marker fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
 		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
 	replaceAll(frame)
@@ -195,10 +195,10 @@ function sb2.Process:jump(frame)
 	self.frame = frame
 end
 
-function sb2.Process:unwind(marker)
+function sb2.Process:unwind(criteria)
 	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
 	
-	while markedFrame and markedFrame:getMarker() ~= marker do
+	while markedFrame and not criteria(markedFrame:getMarker()) do
 		afterFrame = markedFrame
 		markedFrame = markedFrame:getParent()
 	end
