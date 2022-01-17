@@ -41,6 +41,8 @@ Methods:
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	continue(frame, value)
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
+	jump(frame)
+		Transfers execution to the given frame without reporting a value to it.
 	
 	unwind(marker, value)
 		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
@@ -180,13 +182,20 @@ function sb2.Process:continue(frame, value)
 		frame:receiveArg(value)
 	else
 		self:log("Reported: %s", {prettyprint = true, value = value})
-		sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
+		if self.frame then
+			sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
+		else
+			sb2.log("action", "Process at unknown location reported %s", tostring(value))
+		end
 	end
 	
 	self.frame = frame
 end
+function sb2.Process:jump(frame)
+	self.frame = frame
+end
 
-function sb2.Process:unwind(marker, value)
+function sb2.Process:unwind(marker)
 	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
 	
 	while markedFrame and markedFrame:getMarker() ~= marker do
@@ -195,10 +204,10 @@ function sb2.Process:unwind(marker, value)
 	end
 	
 	if markedFrame then
-		self:continue(markedFrame, value)
+		self:jump(markedFrame)
 		if afterFrame then afterFrame:setParent(nil) end
 	else
-		self:continue(nil, value)
+		self:jump(nil)
 	end
 	
 	return oldFrame
