@@ -342,6 +342,9 @@ Methods:
 	setMarker(marker)
 		Sets this frame's unwinding marker. If Process:unwind(marker, value) is called, that value will automatically be reported to this frame's parent (not this frame itself).
 	
+	getAncestor()
+		Returns this frame's oldest ancestor (its parent's parent's parent's parent's etc...)
+	
 	requestNode()
 		Attempts to emerge the node at this frame's position.
 		Return values:
@@ -428,6 +431,10 @@ function sb2.Frame:getMarker()
 end
 function sb2.Frame:setMarker(marker)
 	self.marker = marker
+end
+
+function sb2.Frame:getAncestor()
+	return self.parent and self.parent:getAncestor() or self
 end
 
 function sb2.Frame:requestNode()
