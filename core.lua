@@ -41,8 +41,13 @@ Methods:
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	continue(frame, value)
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
+	
 	unwind(marker, value)
-		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *includes* the marked frame. This is like throwing an exception. If the unwound slice is pushed onto the stack in its entirety, that's like invoking a delimited continuation.
+		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *includes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+	pushAll(frame)
+		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
+	replaceAll(frame)
+		Ditto, but for replace().
 	
 	step()
 		Performs one execution step.
@@ -180,6 +185,7 @@ function sb2.Process:continue(frame, value)
 	
 	self.frame = frame
 end
+
 function sb2.Process:unwind(marker, value)
 	local slice, markedFrame = self.frame, self.frame
 	
@@ -195,6 +201,18 @@ function sb2.Process:unwind(marker, value)
 	end
 	
 	return slice
+end
+function sb2.Process:pushAll(frame)
+	local ancestor = frame:getAncestor()
+	
+	ancestor:setParent(self.frame)
+	self.frame = frame
+end
+function sb2.Process:replaceAll(frame)
+	local ancestor = frame:getAncestor()
+	
+	ancestor:setParent(self.frame:getParent())
+	self.frame = frame
 end
 
 function sb2.Process:step()
