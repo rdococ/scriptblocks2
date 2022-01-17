@@ -44,7 +44,7 @@ Methods:
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
-	unwind(criteria, value)
+	unwind(criteria)
 		Unwinds the call stack until a frame whose marker fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
 		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
