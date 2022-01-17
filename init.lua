@@ -28,6 +28,7 @@ loadfile(MP .. "/closures.lua")(privateSB2)
 
 if enableExperiments then
 	dofile(MP .. "/continuations.lua")
+	dofile(MP .. "/delimited_continuations.lua")
 	dofile(MP .. "/processes.lua")
 	dofile(MP .. "/fun.lua")
 end
