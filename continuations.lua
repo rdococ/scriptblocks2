@@ -10,9 +10,6 @@ Constructor:
 		Creates a new continuation for the given frame. When the continuation is invoked, a copy of this frame will receive the argument passed to the continuation. The frame is copied during initialization, so the original can continue execution without altering the behaviour of the continuation.
 
 Methods:
-	getFrame()
-		Returns the frame this closure represents. The frame has a parent, with a parent, etc. up until the start of the call stack.
-	
 	invokeContinuation(process, arg)
 		Invokes this continuation. This replaces the entire call stack with a copy of the continuation's frame.
 
@@ -26,13 +23,8 @@ function sb2.Continuation:initialize(frame)
 	local frame = frame and frame:copy()
 	self.frame = frame
 end
-
-function sb2.Continuation:getFrame()
-	return self.frame
-end
-
 function sb2.Continuation:invokeContinuation(process, arg)
-	local frame = self:getFrame()
+	local frame = self.frame
 	frame = frame and frame:copy()
 	
 	if frame then
@@ -41,7 +33,6 @@ function sb2.Continuation:invokeContinuation(process, arg)
 	
 	return process:continue(frame, arg)
 end
-
 function sb2.Continuation:recordString(record)
 	return "<continuation>"
 end
