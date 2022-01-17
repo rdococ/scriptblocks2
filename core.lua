@@ -43,7 +43,7 @@ Methods:
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
 	
 	unwind(marker, value)
-		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *includes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+		Unwinds the call stack until a frame with the specified marker, returning the top frame of the unwound slice. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
 		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
 	replaceAll(frame)
@@ -187,20 +187,21 @@ function sb2.Process:continue(frame, value)
 end
 
 function sb2.Process:unwind(marker, value)
-	local slice, markedFrame = self.frame, self.frame
+	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
 	
 	while markedFrame and markedFrame:getMarker() ~= marker do
+		afterFrame = markedFrame
 		markedFrame = markedFrame:getParent()
 	end
 	
 	if markedFrame then
-		self:continue(markedFrame:getParent(), value)
-		markedFrame:setParent(nil)
+		self:continue(markedFrame, value)
+		if afterFrame then afterFrame:setParent(nil) end
 	else
 		self:continue(nil, value)
 	end
 	
-	return slice
+	return oldFrame
 end
 function sb2.Process:pushAll(frame)
 	local ancestor = frame:getAncestor()
