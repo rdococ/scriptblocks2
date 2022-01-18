@@ -83,9 +83,10 @@ function sb2.DelimitedContinuation:recordString(record)
 	return "<delimited continuation>"
 end
 
-minetest.register_alias("scriptblocks2:prompt", "scriptblocks2:call_with_continuation_prompt")
-sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
-	sb2_label = "Call With Continuation Prompt",
+minetest.register_alias("scriptblocks2:prompt", "scriptblocks2:call_with_continuation_delimiter")
+minetest.register_alias("scriptblocks2:call_with_continuation_prompt", "scriptblocks2:call_with_continuation_delimiter")
+sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
+	sb2_label = "Call With Continuation Delimiter",
 	
 	sb2_explanation = {
 		shortExplanation = "Calls the given closure. Delimited continuations created within the closure end here.",
@@ -131,7 +132,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		},
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
-			"It runs the program from this block up until the end of the innermost 'Call With Continuation Prompt' block.",
+			"It runs the program from this block up until the end of the innermost 'Call With Continuation Delimiter' block.",
 		}
 	},
 	
