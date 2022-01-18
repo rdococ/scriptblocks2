@@ -3,7 +3,9 @@ sb2.colors.delimitedContinuations = "#cafcab"
 --[[
 DelimiterFrame
 
-This is a type of frame that represents a continuation delimiter.
+This is a frame type that represents a continuation delimiter. It performs no useful actions on its own, acting like the 'identity' block. Rather, it's used by 'Call With Delimited Continuation' to capture a continuation up to the nearest frame of this type.
+
+An extension implementing exceptions could do something similar with an "ExceptionCatchingFrame". Throwing an exception could unwind the stack until such a frame is found and continue from there.
 ]]
 
 sb2.DelimiterFrame = sb2.registerClass("delimiterFrame")
