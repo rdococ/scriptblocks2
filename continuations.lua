@@ -66,7 +66,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		local closure = frame:getArg("closure")
 		if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
 		
-		return closure:tailCallClosure(process, sb2.Continuation:new(frame:getParent()))
+		return closure:tailCallClosure(process, context, sb2.Continuation:new(frame:getParent()))
 	end
 })
 

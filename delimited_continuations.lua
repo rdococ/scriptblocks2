@@ -58,22 +58,22 @@ function sb2.DelimitedContinuation:initialize(frame)
 	self.frame = frame and frame:copy()
 end
 
-function sb2.DelimitedContinuation:callClosure(process, arg)
+function sb2.DelimitedContinuation:callClosure(process, context, arg)
 	local frame = self.frame and self.frame:copy()
 	if not frame then return process:continue(process:getFrame(), arg) end
 	
 	-- Push a delimiter frame here.
-	process:push(sb2.DelimiterFrame:new(process:getFrame():getContext()))
+	process:push(sb2.DelimiterFrame:new(context))
 	
 	frame:receiveArg(arg)
 	process:pushAll(frame)
 end
-function sb2.DelimitedContinuation:tailCallClosure(process, arg)
+function sb2.DelimitedContinuation:tailCallClosure(process, context, arg)
 	local frame = self.frame and self.frame:copy()
 	if not frame then return process:report(arg) end
 	
 	-- Replace this frame with a marker.
-	process:replace(sb2.DelimiterFrame:new(process:getFrame():getContext()))
+	process:replace(sb2.DelimiterFrame:new(context))
 	
 	frame:receiveArg(arg)
 	process:pushAll(frame)
@@ -117,7 +117,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
 		
 		-- Replace this frame with a delimiter, and call the closure.
 		process:replace(sb2.DelimiterFrame:new(context))
-		return closure:callClosure(process, nil)
+		return closure:callClosure(process, context, nil)
 	end
 })
 
@@ -150,7 +150,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
 		
 		-- Unwind the stack until we find the continuation delimiter.
 		-- The captured slice includes this frame. Remove it, it's unnecessary.
@@ -159,9 +159,8 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		if process:getFrame() then
 			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.
 			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
-			-- Performing a tail call removes the delimiter frame.
-			return closure:tailCallClosure(process, sb2.DelimitedContinuation:new(slice))
+			return closure:tailCallClosure(process, context, sb2.DelimitedContinuation:new(slice))
 		end
-		return closure:callClosure(process, sb2.DelimitedContinuation:new(slice))
+		return closure:callClosure(process, context, sb2.DelimitedContinuation:new(slice))
 	end
 })
