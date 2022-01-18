@@ -33,8 +33,9 @@ function sb2.DelimitedContinuation:recordString(record)
 	return "<delimited continuation>"
 end
 
-sb2.registerScriptblock("scriptblocks2:prompt", {
-	sb2_label = "Delimit Continuation",
+minetest.register_alias("scriptblocks2:prompt", "scriptblocks2:call_with_continuation_prompt")
+sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
+	sb2_label = "Call With Continuation Prompt",
 	
 	sb2_explanation = {
 		shortExplanation = "Calls the given closure. Delimited continuations created within the closure end here.",
@@ -42,8 +43,7 @@ sb2.registerScriptblock("scriptblocks2:prompt", {
 			{"Right", "The closure to call."},
 		},
 		additionalPoints = {
-			"This is meant to be used with the 'Call with Delimited Continuation' block!",
-			"This block defines the 'end' of the continuation that block creates.",
+			"This block defines the end of the continuation the 'Call With Delimited Continuation' block creates.",
 			"For advanced users: These blocks should behave like the prompt/control operators!",
 		}
 	},
@@ -73,7 +73,8 @@ sb2.registerScriptblock("scriptblocks2:prompt", {
 	end
 })
 
-sb2.registerScriptblock("scriptblocks2:control", {
+minetest.register_alias("scriptblocks2:control", "scriptblocks2:call_with_delimited_continuation")
+sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 	sb2_label = "Call With Delimited Continuation",
 	
 	sb2_explanation = {
@@ -82,12 +83,8 @@ sb2.registerScriptblock("scriptblocks2:control", {
 			{"Right", "The closure to call."},
 		},
 		additionalPoints = {
-			"This block is meant to be used with the 'Delimit Continuation' block.",
-			"This block does the following:",
-			"1. It skips part of the program, up until the end of the 'Delimit' block.",
-			"2. Then, it takes the part of the program it skipped, and turns it into a special closure.",
-			"3. When called, the special closure finishes the part of the program that was skipped.",
-			"4. This special closure is then passed to this block's closure, which reports directly back to the end of the 'Delimit' block.",
+			"This delimited continuation value can be called like a closure.",
+			"It runs the program from this block up until the end of the innermost 'Call With Continuation Prompt' block.",
 			"For advanced users: These blocks should behave like the prompt/control operators!",
 		}
 	},
