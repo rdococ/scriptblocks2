@@ -96,7 +96,6 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
 		},
 		additionalPoints = {
 			"This block defines the end of the continuation the 'Call With Delimited Continuation' block creates.",
-			"For advanced users: These blocks should behave like the reset/shift operators!",
 		}
 	},
 	
@@ -135,7 +134,6 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
 			"It runs the program from this block up until the end of the innermost 'Call With Continuation Prompt' block.",
-			"For advanced users: These blocks should behave like the reset/shift operators!",
 		}
 	},
 	
