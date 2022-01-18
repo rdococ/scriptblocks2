@@ -37,15 +37,19 @@ Methods:
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
 	replace(frame)
 		Replaces the topmost frame with a new one; i.e. the new frame replaces the current frame completely. This is equivalent to a tail-recursive call.
+	
 	report(value)
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
 	continue(frame, value)
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
+	
+	pop()
+		Pops the current frame without providing a value. May be used for more complex tail calls, or replacing a frame with a different type of frame before evaluating something on top of it.
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
 	unwind(criteria)
-		Unwinds the call stack until a frame whose marker fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+		Unwinds the call stack until a frame fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
 		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
 	replaceAll(frame)
@@ -174,6 +178,7 @@ function sb2.Process:replace(frame)
 	frame:setParent(self.frame:getParent())
 	self.frame = frame
 end
+
 function sb2.Process:report(value)
 	return self:continue(self.frame:getParent(), value)
 end
@@ -182,7 +187,7 @@ function sb2.Process:continue(frame, value)
 		frame:receiveArg(value)
 	else
 		self:log("Reported: %s", {prettyprint = true, value = value})
-		if self.frame then
+		if self.frame and self.frame.getPos then
 			sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
 		else
 			sb2.log("action", "Process at unknown location reported %s", tostring(value))
@@ -191,6 +196,10 @@ function sb2.Process:continue(frame, value)
 	
 	self.frame = frame
 end
+
+function sb2.Process:pop()
+	self.frame = self.frame:getParent()
+end
 function sb2.Process:jump(frame)
 	self.frame = frame
 end
@@ -198,7 +207,7 @@ end
 function sb2.Process:unwind(criteria)
 	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
 	
-	while markedFrame and not criteria(markedFrame:getMarker()) do
+	while markedFrame and not criteria(markedFrame) do
 		afterFrame = markedFrame
 		markedFrame = markedFrame:getParent()
 	end
@@ -213,13 +222,21 @@ function sb2.Process:unwind(criteria)
 	return oldFrame
 end
 function sb2.Process:pushAll(frame)
-	local ancestor = frame:getAncestor()
+	local ancestor = frame
+	while true do
+		local newAncestor = ancestor:getParent()
+		if newAncestor then ancestor = newAncestor else break end
+	end
 	
 	ancestor:setParent(self.frame)
 	self.frame = frame
 end
 function sb2.Process:replaceAll(frame)
-	local ancestor = frame:getAncestor()
+	local ancestor = frame
+	while true do
+		local newAncestor = ancestor:getParent()
+		if newAncestor then ancestor = newAncestor else break end
+	end
 	
 	ancestor:setParent(self.frame:getParent())
 	self.frame = frame
@@ -232,22 +249,7 @@ function sb2.Process:step()
 	local frame = self.frame
 	if not frame then return self:halt() end
 	
-	local pos = frame.pos
-	local node = frame:requestNode()
-	
-	if node == nil then return self:yield() end
-	if node == false then
-		self:log("Failed to load block at %s", minetest.pos_to_string(pos))
-	end
-	
-	local nodename = node and node.name or "ignore"
-	
-	local def = minetest.registered_nodes[nodename]
-	if def and def.sb2_action then
-		def.sb2_action(pos, node, self, frame, frame:getContext())
-	else
-		self:report(nil)
-	end
+	frame:step(self)
 	frame = self.frame
 	
 	if not self.halted then
@@ -338,12 +340,14 @@ Frame
 
 A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps or receive values reported from elsewhere.
 
-Methods:
-	copy()
-		Copies this frame recursively. The resulting frame can be restored with process:setFrame(), acting as a continuation.
+Extensions may define their own types of frame to implement completely custom behaviours. When interacting with frames outside the current frame, scriptblocks can only be sure that the basic methods exist.
+
+Basic interface:
+	These are methods that must be implemented by all types of frame.
 	
-	getPos()
-		Returns the position of the node this frame is evaluating.
+	copy()
+		Copies this frame recursively. The resulting frame can be restored with process:continue(), acting as a continuation.
+	
 	getContext()
 		Returns the context of this evaluation frame. This consists of variables, the top block that began the current procedure, and the player blamed for building the current procedure.
 	
@@ -351,6 +355,18 @@ Methods:
 		Returns the frame that this frame will eventually report back to.
 	setParent(parent)
 		Sets this frame's parent, causing it to report back to that frame when done.
+	
+	receiveArg(value)
+		Receives a value. The default frame type stores it in the selected argument and marks it as evaluated.
+	
+	step(process)
+		Runs an execution step. The default frame type attempts to load the node at its position, and runs its sb2_action property to decide what to do.
+
+Frame interface:
+	These are methods that this type of frame implements. Other types of frame don't have to be.
+	
+	getPos()
+		Returns the position of the node this frame is evaluating.
 	
 	getArguments()
 		Returns a table consisting of this frame's evaluated arguments.
@@ -362,26 +378,9 @@ Methods:
 		Manually sets the value of this argument for temporary storage by the scriptblock. Also marks the argument as evaluated.
 	selectArg(arg)
 		Selects the given argument as the "report destination" for the next frame that this frame pushes onto the process.
-	receiveArg(value)
-		Receives a value, storing it in the selected argument and marking it as evaluated.
-	
-	getMarker()
-		Returns the frame's unwinding marker.
-	setMarker(marker)
-		Sets this frame's unwinding marker. If Process:unwind(marker, value) is called, that value will automatically be reported to this frame's parent (not this frame itself).
-	
-	getAncestor()
-		Returns this frame's oldest ancestor (its parent's parent's parent's parent's etc...)
 	
 	requestNode()
-		Attempts to emerge the node at this frame's position.
-		Return values:
-			nil
-				The emerge request is pending.
-			{name = ..., ...}
-				The emerge request was successful, here's the node's data.
-			false
-				The emerge request failed.
+		Attempts to emerge the node at this frame's position. Internal.
 ]]
 
 sb2.Frame = sb2.registerClass("frame")
@@ -400,12 +399,10 @@ function sb2.Frame:initialize(pos, context)
 	self.requestedEmerge = false
 	self.emergeFailed = false
 end
-function sb2.Frame:copy(slice)
+
+function sb2.Frame:copy()
 	local copy = self:getClass():new(self.pos, self.context)
-	
-	if self ~= slice then
-		copy.parent = self.parent and self.parent:copy(slice)
-	end
+	copy.parent = self.parent and self.parent:copy()
 	
 	copy.selectedArg = self.selectedArg
 	
@@ -421,6 +418,29 @@ function sb2.Frame:copy(slice)
 	
 	return copy
 end
+function sb2.Frame:step(process)
+	local pos = self.pos
+	local node = self:requestNode()
+	
+	if node == nil then return process:yield() end
+	if node == false then
+		process:log("Failed to load block at %s", minetest.pos_to_string(pos))
+	end
+	
+	local nodename = node and node.name or "ignore"
+	
+	local def = minetest.registered_nodes[nodename]
+	if def and def.sb2_action then
+		return def.sb2_action(pos, node, process, self, self:getContext())
+	else
+		return process:report(nil)
+	end
+end
+function sb2.Frame:receiveArg(value)
+	self.arguments[self.selectedArg] = value
+	self.argsEvaluated[self.selectedArg] = true
+end
+
 function sb2.Frame:getPos()
 	return self.pos
 end
@@ -448,21 +468,6 @@ function sb2.Frame:setArg(arg, value)
 end
 function sb2.Frame:selectArg(arg)
 	self.selectedArg = arg
-end
-function sb2.Frame:receiveArg(value)
-	self.arguments[self.selectedArg] = value
-	self.argsEvaluated[self.selectedArg] = true
-end
-
-function sb2.Frame:getMarker()
-	return self.marker
-end
-function sb2.Frame:setMarker(marker)
-	self.marker = marker
-end
-
-function sb2.Frame:getAncestor()
-	return self.parent and self.parent:getAncestor() or self
 end
 
 function sb2.Frame:requestNode()

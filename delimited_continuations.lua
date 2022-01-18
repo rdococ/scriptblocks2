@@ -1,6 +1,48 @@
 sb2.colors.delimitedContinuations = "#cafcab"
 
 --[[
+DelimiterFrame
+
+This is a type of frame that represents a continuation delimiter.
+]]
+
+sb2.DelimiterFrame = sb2.registerClass("delimiterFrame")
+
+function sb2.DelimiterFrame:initialize(context)
+	self.context = context
+	self.parent = nil
+	
+	self.arg = nil
+end
+
+function sb2.DelimiterFrame:copy()
+	local newFrame = self:getClass():new(self.context)
+	newFrame.parent = self.parent and self.parent:copy()
+end
+function sb2.DelimiterFrame:step(process)
+	return process:report(self.arg)
+end
+function sb2.DelimiterFrame:receiveArg(arg)
+	self.arg = arg
+end
+
+function sb2.DelimiterFrame:getContext()
+	return self.context
+end
+
+function sb2.DelimiterFrame:getParent()
+	return self.parent
+end
+function sb2.DelimiterFrame:setParent(parent)
+	self.parent = parent
+end
+
+function sb2.DelimiterFrame:isDelimiter()
+	return true
+end
+
+
+--[[
 DelimitedContinuation
 
 A delimited continuation is much like a continuation. A continuation represents a point in the execution of a process; when a continuation is invoked, execution carries on from that point without ever returning.
@@ -15,20 +57,28 @@ sb2.DelimitedContinuation = sb2.registerClass("delimitedContinuation")
 function sb2.DelimitedContinuation:initialize(frame)
 	self.frame = frame and frame:copy()
 end
+
 function sb2.DelimitedContinuation:callClosure(process, arg)
 	local frame = self.frame and self.frame:copy()
-	if not frame then return process:continue(process:getFrame(), nil) end
+	if not frame then return process:continue(process:getFrame(), arg) end
+	
+	-- Push a delimiter frame here.
+	process:push(sb2.DelimiterFrame:new(process:getFrame():getContext()))
 	
 	frame:receiveArg(arg)
 	process:pushAll(frame)
 end
 function sb2.DelimitedContinuation:tailCallClosure(process, arg)
 	local frame = self.frame and self.frame:copy()
-	if not frame then return process:report(nil) end
+	if not frame then return process:report(arg) end
+	
+	-- Replace this frame with a marker.
+	process:replace(sb2.DelimiterFrame:new(process:getFrame():getContext()))
 	
 	frame:receiveArg(arg)
-	process:replaceAll(frame)
+	process:pushAll(frame)
 end
+
 function sb2.DelimitedContinuation:recordString(record)
 	return "<delimited continuation>"
 end
@@ -44,7 +94,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
 		},
 		additionalPoints = {
 			"This block defines the end of the continuation the 'Call With Delimited Continuation' block creates.",
-			"For advanced users: These blocks should behave like the prompt/control operators!",
+			"For advanced users: These blocks should behave like the reset/shift operators!",
 		}
 	},
 	
@@ -59,17 +109,15 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_prompt", {
 			frame:selectArg("closure")
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
-		if not frame:isArgEvaluated("value") then
-			local closure = frame:getArg("closure")
-			if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
-			
-			frame:selectArg("value")
-			frame:setMarker("delimited_continuations:delimiter")
-			
-			return closure:callClosure(process, delimiter)
-		end
 		
-		return process:report(frame:getArg("value"))
+		local closure = frame:getArg("closure")
+		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		
+		frame:selectArg("value")
+		
+		-- Replace this frame with a delimiter, and call the closure.
+		process:replace(sb2.DelimiterFrame:new(context))
+		return closure:callClosure(process, nil)
 	end
 })
 
@@ -85,7 +133,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
 			"It runs the program from this block up until the end of the innermost 'Call With Continuation Prompt' block.",
-			"For advanced users: These blocks should behave like the prompt/control operators!",
+			"For advanced users: These blocks should behave like the reset/shift operators!",
 		}
 	},
 	
@@ -106,15 +154,14 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		
 		-- Unwind the stack until we find the continuation delimiter.
 		-- The captured slice includes this frame. Remove it, it's unnecessary.
-		local slice = process:unwind(function (m) return m == "delimited_continuations:delimiter" end):getParent()
+		local slice = process:unwind(function (frame) return frame.isDelimiter and frame:isDelimiter() end):getParent()
 		
-		frame = process:getFrame()
-		if frame then
-			-- Reset frame present, do a tail call.
+		if process:getFrame() then
+			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.
+			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
+			-- Performing a tail call removes the delimiter frame.
 			return closure:tailCallClosure(process, sb2.DelimitedContinuation:new(slice))
-		else
-			-- Reset frame not found! Do a regular call.
-			return closure:callClosure(process, sb2.DelimitedContinuation:new(slice))
 		end
+		return closure:callClosure(process, sb2.DelimitedContinuation:new(slice))
 	end
 })
