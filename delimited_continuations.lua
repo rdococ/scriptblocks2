@@ -8,15 +8,13 @@ This is a custom frame type that represents a continuation delimiter. It is crea
 
 sb2.DelimiterFrame = sb2.registerClass("delimiterFrame")
 
-function sb2.DelimiterFrame:initialize(context)
-	self.context = context
+function sb2.DelimiterFrame:initialize()
 	self.parent = nil
-	
 	self.arg = nil
 end
 
 function sb2.DelimiterFrame:copy()
-	local newFrame = self:getClass():new(self.context)
+	local newFrame = self:getClass():new()
 	newFrame.parent = self.parent and self.parent:copy()
 end
 function sb2.DelimiterFrame:step(process)
@@ -24,10 +22,6 @@ function sb2.DelimiterFrame:step(process)
 end
 function sb2.DelimiterFrame:receiveArg(arg)
 	self.arg = arg
-end
-
-function sb2.DelimiterFrame:getContext()
-	return self.context
 end
 
 function sb2.DelimiterFrame:getParent()

@@ -348,9 +348,6 @@ Basic interface:
 	copy()
 		Copies this frame recursively. The resulting frame can be restored with process:continue(), acting as a continuation.
 	
-	getContext()
-		Returns the context of this evaluation frame. This consists of variables, the top block that began the current procedure, and the player blamed for building the current procedure.
-	
 	getParent()
 		Returns the frame that this frame will eventually report back to.
 	setParent(parent)
@@ -363,10 +360,13 @@ Basic interface:
 		Runs an execution step. The default frame type attempts to load the node at its position, and runs its sb2_action property to decide what to do.
 
 Frame interface:
-	These are methods that this type of frame implements. Other types of frame don't have to be.
+	These are methods that this type of frame implements for scriptblocks to use. Other types of frame don't have to implement these.
 	
 	getPos()
 		Returns the position of the node this frame is evaluating.
+	
+	getContext()
+		Returns the context of this evaluation frame. This consists of variables, the top block that began the current procedure, and the player blamed for building the current procedure.
 	
 	getArguments()
 		Returns a table consisting of this frame's evaluated arguments.
