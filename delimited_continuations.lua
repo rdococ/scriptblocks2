@@ -8,7 +8,9 @@ This is a custom frame type that represents a continuation delimiter. It is crea
 
 sb2.DelimiterFrame = sb2.registerClass("delimiterFrame")
 
-function sb2.DelimiterFrame:initialize()
+function sb2.DelimiterFrame:initialize(tag)
+	self.tag = tag
+	
 	self.parent = nil
 	self.arg = nil
 end
@@ -31,8 +33,8 @@ function sb2.DelimiterFrame:setParent(parent)
 	self.parent = parent
 end
 
-function sb2.DelimiterFrame:isDelimiter()
-	return true
+function sb2.DelimiterFrame:getDelimiterTag()
+	return self.tag
 end
 
 
@@ -48,8 +50,9 @@ This makes delimited continuations a lot more powerful than regular continuation
 
 sb2.DelimitedContinuation = sb2.registerClass("delimitedContinuation")
 
-function sb2.DelimitedContinuation:initialize(frame)
+function sb2.DelimitedContinuation:initialize(frame, tag)
 	self.frame = frame and frame:copy()
+	self.tag = tag
 end
 
 function sb2.DelimitedContinuation:callClosure(process, context, arg)
@@ -57,7 +60,7 @@ function sb2.DelimitedContinuation:callClosure(process, context, arg)
 	if not frame then return process:continue(process:getFrame(), arg) end
 	
 	-- Push a delimiter frame here.
-	process:push(sb2.DelimiterFrame:new(context))
+	process:push(sb2.DelimiterFrame:new(self.tag))
 	
 	frame:receiveArg(arg)
 	process:pushAll(frame)
@@ -67,7 +70,7 @@ function sb2.DelimitedContinuation:tailCallClosure(process, context, arg)
 	if not frame then return process:report(arg) end
 	
 	-- Replace this frame with a marker.
-	process:replace(sb2.DelimiterFrame:new(context))
+	process:replace(sb2.DelimiterFrame:new(self.tag))
 	
 	frame:receiveArg(arg)
 	process:pushAll(frame)
@@ -83,18 +86,19 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 	sb2_label = "Call With Continuation Delimiter",
 	
 	sb2_explanation = {
-		shortExplanation = "Calls the given closure. Delimited continuations created within the closure end here.",
+		shortExplanation = "Calls the given closure. Delimited continuations created within the closure with the same tag value end here.",
 		inputSlots = {
 			{"Right", "The closure to call."},
+			{"Front", "The tag required for the call/DC block to use this delimiter."},
 		},
 		additionalPoints = {
-			"This block defines the end of the continuation the 'Call With Delimited Continuation' block creates.",
+			"This block defines the end of the continuations created by 'Call With Delimited Continuation' blocks with the same tag.",
 		}
 	},
 	
 	sb2_color = sb2.colors.delimitedContinuations,
 	sb2_icon  = "sb2_icon_call_with_continuation.png",
-	sb2_slotted_faces = {"right"},
+	sb2_slotted_faces = {"right", "front"},
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
@@ -103,6 +107,10 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 			frame:selectArg("closure")
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
+		if not frame:isArgEvaluated("tag") then
+			frame:selectArg("tag")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
 		
 		local closure = frame:getArg("closure")
 		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
@@ -110,7 +118,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		frame:selectArg("value")
 		
 		-- Replace this frame with a delimiter, and call the closure.
-		process:replace(sb2.DelimiterFrame:new(context))
+		process:replace(sb2.DelimiterFrame:new(frame:getArg("tag")))
 		return closure:callClosure(process, context, nil)
 	end
 })
@@ -120,19 +128,20 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 	sb2_label = "Call With Delimited Continuation",
 	
 	sb2_explanation = {
-		shortExplanation = "Calls a closure, passing this block's continuation up until the end of the innermost 'Delimit Continuation' block to it.",
+		shortExplanation = "Calls a closure, passing this block's continuation up until the end of the innermost 'Call With Continuation Delimiter' block with the same tag.",
 		inputSlots = {
 			{"Right", "The closure to call."},
+			{"Front", "The tag for the delimiter block to delimit the continuation at."},
 		},
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
-			"It runs the program from this block up until the end of the innermost 'Call With Continuation Delimiter' block.",
+			"It runs the program from this block up until the end of the innermost delimiter block with the same tag value.",
 		}
 	},
 	
 	sb2_color = sb2.colors.delimitedContinuations,
 	sb2_icon  = "sb2_icon_invoke_continuation.png",
-	sb2_slotted_faces = {"right"},
+	sb2_slotted_faces = {"right", "front"},
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
@@ -141,19 +150,25 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 			frame:selectArg("closure")
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
+		if not frame:isArgEvaluated("tag") then
+			frame:selectArg("tag")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
 		
 		local closure = frame:getArg("closure")
 		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
 		
+		local tag = frame:getArg("tag")
+		
 		-- Unwind the stack until we find the continuation delimiter.
 		-- The captured slice includes this frame. Remove it, it's unnecessary.
-		local slice = process:unwind(function (frame) return frame.isDelimiter and frame:isDelimiter() end):getParent()
+		local slice = process:unwind(function (f) return f.getDelimiterTag and f:getDelimiterTag() == tag end):getParent()
 		
 		if process:getFrame() then
 			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.
 			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
-			return closure:tailCallClosure(process, context, sb2.DelimitedContinuation:new(slice))
+			return closure:tailCallClosure(process, context, sb2.DelimitedContinuation:new(slice, tag))
 		end
-		return closure:callClosure(process, context, sb2.DelimitedContinuation:new(slice))
+		return closure:callClosure(process, context, sb2.DelimitedContinuation:new(slice, tag))
 	end
 })
