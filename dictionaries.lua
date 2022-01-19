@@ -28,7 +28,7 @@ end
 function sb2.Dictionary:getItem(key)
 	return self.entries[key]
 end
-function sb2.Dictionary:setEntry(key, value)
+function sb2.Dictionary:setItem(key, value)
 	if key == nil then return end
 	
 	if self.entries[key] ~= nil then self.size = self.size - 1 end
