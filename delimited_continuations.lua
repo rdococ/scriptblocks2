@@ -51,7 +51,7 @@ This makes delimited continuations a lot more powerful than regular continuation
 sb2.DelimitedContinuation = sb2.registerClass("delimitedContinuation")
 
 function sb2.DelimitedContinuation:initialize(frame, tag)
-	self.frame = frame and frame:copy()
+	self.frame = frame
 	self.tag = tag
 end
 
