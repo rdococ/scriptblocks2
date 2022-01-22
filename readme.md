@@ -17,10 +17,10 @@ This mod is an experiment to see what kind of fully-fledged programming language
 # Experiments
 
 * First-class processes
-* First-class continuations
+* Full, asymmetric, cloneable coroutines
 * Introspective 'fun' blocks
 
-These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed in the future!
+These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed in the future.
 
 # Examples
 
