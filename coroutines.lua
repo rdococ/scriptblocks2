@@ -139,9 +139,9 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 		},
 		additionalPoints = {
 			"A coroutine is a special kind of closure that can be paused and resumed.",
-			"A coroutine can pause itself with 'Call/Run Out Of Coroutine', reporting back to its caller.",
-			"The caller can resume the coroutine, which will then continue from where it left off.",
-			"The coroutine starts out paused, so make sure to 'Call/Run Into Coroutine' to start it up.",
+			"A coroutine can report back to its caller with 'Call/Run Out Of Coroutine', pausing itself in the process.",
+			"The caller can then resume the coroutine, which will continue from where it left off.",
+			"The coroutine starts out paused, so make sure to 'Call/Run Into Coroutine' to start it up!",
 		},
 	},
 	
@@ -378,7 +378,7 @@ sb2.registerScriptblock("scriptblocks2:clone_coroutine", {
 		},
 		additionalPoints = {
 			"Any variables, lists, etc. are shared between the original and the clone - this may result in very strange effects!",
-			"This block can be used to implement multi-shot continuations!",
+			"This can be used to implement multi-shot continuations!",
 			"Running coroutines cannot currently be cloned.",
 		},
 	},
