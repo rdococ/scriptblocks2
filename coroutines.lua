@@ -1,4 +1,4 @@
-sb2.colors.coroutines = "#cafcab"
+sb2.colors.coroutines = "#fce762"
 
 sb2.CoroutineStartFrame = sb2.registerClass("CoroutineStartFrame")
 
@@ -129,8 +129,8 @@ function sb2.Coroutine:recordString(record)
 end
 
 
-sb2.registerScriptblock("scriptblocks2:create_coroutine", {
-	sb2_label = "Create Coroutine",
+sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
+	sb2_label = "Create New Coroutine",
 	
 	sb2_explanation = {
 		shortExplanation = "Creates and reports a new coroutine.",
@@ -144,7 +144,7 @@ sb2.registerScriptblock("scriptblocks2:create_coroutine", {
 	},
 	
 	sb2_color = sb2.colors.coroutines,
-	sb2_icon  = "sb2_icon_flag.png",
+	sb2_icon  = "sb2_icon_program_point.png",
 	sb2_slotted_faces = {"right"},
 	
 	sb2_action = function (pos, node, process, frame, context)
