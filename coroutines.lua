@@ -163,6 +163,81 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 	end
 })
 
+sb2.registerScriptblock("scriptblocks2:call_coroutine", {
+	sb2_label = "Call Coroutine",
+	
+	sb2_explanation = {
+		shortExplanation = "Resumes a coroutine and reports its next yielded value.",
+		inputSlots = {
+			{"Front", "The coroutine to resume."},
+			{"Right", "The value to pass to the coroutine."},
+		},
+	},
+	
+	sb2_color = sb2.colors.coroutines,
+	sb2_icon  = "sb2_icon_invoke_continuation.png",
+	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if not frame:isArgEvaluated("coroutine") then
+			frame:selectArg("coroutine")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		end
+		if not frame:isArgEvaluated(1) then
+			frame:selectArg(1)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
+		end
+		
+		local coro = frame:getArg("coroutine")
+		if type(coro) ~= "table" or not coro.doCall then return process:report(nil) end
+		
+		process:pop()
+		return coro:doCall(process, context, frame:getArg(1))
+	end,
+})
+sb2.registerScriptblock("scriptblocks2:run_coroutine", {
+	sb2_label = "Run Coroutine",
+	
+	sb2_explanation = {
+		shortExplanation = "Resumes a coroutine, and continues after the coroutine yields.",
+		inputSlots = {
+			{"Left", "The coroutine to resume."},
+			{"Right", "The value to pass to the coroutine."},
+			{"Front", "What to do next."},
+		},
+	},
+	
+	sb2_color = sb2.colors.coroutines,
+	sb2_icon  = "sb2_icon_run_coroutine.png",
+	sb2_slotted_faces = {"left", "right", "front"},
+	
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if not frame:isArgEvaluated("coroutine") then
+			frame:selectArg("coroutine")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.left), context))
+		end
+		if not frame:isArgEvaluated(1) then
+			frame:selectArg(1)
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
+		end
+		if not frame:isArgEvaluated("value") then
+			frame:selectArg("value")
+			
+			local coro = frame:getArg("coroutine")
+			if type(coro) ~= "table" or not coro.doCall then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			
+			return coro:doCall(process, context, frame:getArg(1))
+		end
+		
+		process:pop()
+		return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+	end,
+})
+
 sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 	sb2_label = "Yield From Coroutine",
 	
@@ -172,13 +247,13 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 			{"Right", "The value to report back to the caller."},
 		},
 		additionalPoints = {
-			"When the coroutine is called again, it will continue from this point.",
-			"The value passed to that call will be reported by this block.",
+			"When the coroutine is resumed again, it will continue from this point.",
+			"When resumed, this block will report the value passed back to the coroutine.",
 		},
 	},
 	
 	sb2_color = sb2.colors.coroutines,
-	sb2_icon  = "sb2_icon_pause.png",
+	sb2_icon  = "sb2_icon_yield_from_coroutine.png",
 	sb2_slotted_faces = {"right"},
 	
 	sb2_action = function (pos, node, process, frame, context)
@@ -205,6 +280,56 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 		
 		process:pop()
 		return coro:doYield(process, frame:getArg("arg"))
+	end
+})
+sb2.registerScriptblock("scriptblocks2:yield_from_coroutine_then_continue", {
+	sb2_label = "Yield From Coroutine Then Continue",
+	
+	sb2_explanation = {
+		shortExplanation = "Pauses the current coroutine, passing a value back to the caller, before continuing.",
+		inputSlots = {
+			{"Right", "The value to report back to the caller."},
+			{"Front", "What to do when this coroutine is resumed."},
+		},
+		additionalPoints = {
+			"When the coroutine is resumed again, it will continue from this point.",
+		},
+	},
+	
+	sb2_color = sb2.colors.coroutines,
+	sb2_icon  = "sb2_icon_yield_from_coroutine_then_continue.png",
+	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_action = function (pos, node, process, frame, context)
+		local dirs = sb2.facedirToDirs(node.param2)
+		
+		if not frame:isArgEvaluated("arg") then
+			frame:selectArg("arg")
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
+		end
+		if not frame:isArgEvaluated("value") then
+			local delimiter = process:find(function (f) return f.getDelimiteeCoroutine end)
+			local coro = delimiter and delimiter:getDelimiteeCoroutine()
+			
+			if type(coro) ~= "table" or not coro.doYield then
+				local value = frame:getArg("arg")
+				
+				if value ~= nil then
+					process:log("Yielded: %s", sb2.toString(value))
+				end
+				
+				process:yield()
+				process:pop()
+				return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
+			end
+			
+			frame:selectArg("value")
+			
+			return coro:doYield(process, frame:getArg("arg"))
+		end
+		
+		process:pop()
+		process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 	end
 })
 
