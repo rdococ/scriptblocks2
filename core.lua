@@ -35,23 +35,28 @@ Methods:
 	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
-	
-	report(value)
-		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
-	continue(frame, value)
-		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
-	
 	pop()
 		Pops the current frame without providing a value. May be used for tail calls, or replacing a frame with a different type of frame before evaluating something on top of it.
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
+	receiveArg(value)
+		Reports an evaluated value to the current evaluation frame, usually after it has requested to evaluate something.
+	
+	report(value)
+		Pops the current frame and provides a value to the previous frame. This is like returning from a function call.
+		This is equivalent to pop(); receiveArg(value), but it is very commonly used.
+	continue(frame, value)
+		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
+		This is equivalent to jump(frame); receiveArg(value), but it has been kept for similar reasons as report(value).
+	
 	find(criteria)
 		Finds the nearest call stack frame that fits the specified criteria.
 	unwind(criteria)
 		Unwinds the call stack until a frame fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+	
 	pushAll(frame)
-		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
+		Similar to push(frame), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation. If 'frame' is nil, this is interpreted as a call stack slice of 0 frames and nothing is done.
 	
 	step()
 		Performs one execution step.
@@ -172,13 +177,16 @@ function sb2.Process:push(frame)
 	frame:setParent(self.frame)
 	self.frame = frame
 end
-
-function sb2.Process:report(value)
-	return self:continue(self.frame:getParent(), value)
+function sb2.Process:pop()
+	self.frame = self.frame:getParent()
 end
-function sb2.Process:continue(frame, value)
-	if frame then
-		frame:receiveArg(value)
+function sb2.Process:jump(frame)
+	self.frame = frame
+end
+
+function sb2.Process:receiveArg(value)
+	if self.frame then
+		return self.frame:receiveArg(value)
 	else
 		self:log("Reported: %s", {prettyprint = true, value = value})
 		if self.frame and self.frame.getPos then
@@ -187,15 +195,15 @@ function sb2.Process:continue(frame, value)
 			sb2.log("action", "Process at unknown location reported %s", tostring(value))
 		end
 	end
-	
-	self.frame = frame
 end
 
-function sb2.Process:pop()
-	self.frame = self.frame:getParent()
+function sb2.Process:report(value)
+	self:pop()
+	return self:receiveArg(value)
 end
-function sb2.Process:jump(frame)
-	self.frame = frame
+function sb2.Process:continue(frame, value)
+	self:jump(frame)
+	return self:receiveArg(value)
 end
 
 function sb2.Process:find(criteria)
@@ -222,9 +230,11 @@ function sb2.Process:unwind(criteria)
 		self:jump(nil)
 	end
 	
-	return oldFrame
+	return markedFrame ~= oldFrame and oldFrame or nil
 end
 function sb2.Process:pushAll(frame)
+	if frame == nil then return end
+	
 	local ancestor = frame
 	while true do
 		local newAncestor = ancestor:getParent()
