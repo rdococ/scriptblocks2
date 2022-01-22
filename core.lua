@@ -48,6 +48,8 @@ Methods:
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
+	find(criteria)
+		Finds the nearest call stack frame that fits the specified criteria.
 	unwind(criteria)
 		Unwinds the call stack until a frame fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
@@ -204,6 +206,15 @@ function sb2.Process:jump(frame)
 	self.frame = frame
 end
 
+function sb2.Process:find(criteria)
+	local markedFrame = self.frame
+	
+	while markedFrame and not criteria(markedFrame) do
+		markedFrame = markedFrame:getParent()
+	end
+	
+	return markedFrame
+end
 function sb2.Process:unwind(criteria)
 	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
 	
