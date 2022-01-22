@@ -213,7 +213,7 @@ sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 	},
 	
 	sb2_color = sb2.colors.coroutines,
-	sb2_icon  = "sb2_icon_is_process_running.png",
+	sb2_icon  = "sb2_icon_get_coroutine_state.png",
 	sb2_slotted_faces = {"right"},
 	
 	sb2_action = function (pos, node, process, frame, context)
