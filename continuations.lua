@@ -1,4 +1,4 @@
-sb2.colors.continuations = "#fce762"
+sb2.colors.continuations = "#fced8a"
 
 --[[
 Continuation
