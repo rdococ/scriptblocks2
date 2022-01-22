@@ -345,7 +345,7 @@ sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 			{"Right", "The coroutine to check."},
 		},
 		additionalPoints = {
-			"Dead coroutines will report nil if they are resumed again.",
+			"Finished coroutines will report nil if they are resumed again.",
 		},
 	},
 	
