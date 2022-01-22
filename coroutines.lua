@@ -193,7 +193,13 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 		local coro = delimiter and delimiter:getDelimiteeCoroutine()
 		
 		if type(coro) ~= "table" or not coro.doYield then
-			process:log("Yielded: %s", sb2.toString(frame:getArg("arg")))
+			local value = frame:getArg("arg")
+			
+			if value ~= nil then
+				process:log("Yielded: %s", sb2.toString(value))
+			end
+			
+			process:yield()
 			return process:report(nil)
 		end
 		
