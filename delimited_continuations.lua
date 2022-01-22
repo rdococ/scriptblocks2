@@ -83,12 +83,15 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		},
 		additionalPoints = {
 			"This block defines the end of the continuations created by 'Call With Delimited Continuation' blocks with the same tag.",
+			"Continuations have been replaced by coroutines. This block may be removed in the future!",
 		}
 	},
 	
 	sb2_color = sb2.colors.delimitedContinuations,
 	sb2_icon  = "sb2_icon_call_with_continuation.png",
 	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_deprecated = true,
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
@@ -128,12 +131,15 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
 			"It runs the program from this block up until the end of the innermost delimiter block with the same tag value.",
+			"Continuations have been replaced by coroutines. This block may be removed in the future!",
 		}
 	},
 	
 	sb2_color = sb2.colors.delimitedContinuations,
 	sb2_icon  = "sb2_icon_invoke_continuation.png",
 	sb2_slotted_faces = {"right", "front"},
+	
+	sb2_deprecated = true,
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)

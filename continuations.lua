@@ -47,13 +47,16 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		},
 		additionalPoints = {
 			"This block calls a closure, passing a special 'continuation' value to it.",
-			"When this 'continuation' is invoked, the program jumps back to this point."
+			"When this 'continuation' is invoked, the program jumps back to this point.",
+			"Continuations have been replaced by coroutines. This block may be removed in the future!",
 		}
 	},
 	
 	sb2_color = sb2.colors.continuations,
 	sb2_icon  = "sb2_icon_call_with_continuation.png",
 	sb2_slotted_faces = {"right"},
+	
+	sb2_deprecated = true,
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
@@ -80,11 +83,16 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 			{"Front", "The continuation to invoke."},
 			{"Right", "The value to invoke the continuation with."}
 		},
+		additionalPoints = {
+			"Continuations have been replaced by coroutines. This block may be removed in the future!",
+		}
 	},
 	
 	sb2_color = sb2.colors.continuations,
 	sb2_icon  = "sb2_icon_invoke_continuation.png",
 	sb2_slotted_faces = {"front", "right"},
+	
+	sb2_deprecated = true,
 	
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
