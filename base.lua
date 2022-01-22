@@ -93,14 +93,14 @@ function sb2.simple_action(def)
 end
 
 local faceIndexes = {top = 1, bottom = 2, right = 3, left = 4, back = 5, front = 6}
-function sb2.makeTiles(color, icons, slots)
+function sb2.makeTiles(color, icons, slots, deprecated)
 	if type(icons) == "string" then
 		icons = {icons, "blank.png", "blank.png", "blank.png", "blank.png", "blank.png"}
 	end
 	
 	local tiles = {}
 	for _, icon in ipairs(icons) do
-		table.insert(tiles, "sb2_base.png^[multiply:" .. color .. "^sb2_highlight.png^(" .. icon .. "^[opacity:45)")
+		table.insert(tiles, "sb2_base.png^[multiply:" .. color .. "^" .. (deprecated and "sb2_deprecated_highlight.png" or "sb2_highlight.png") .. "^(" .. icon .. "^[opacity:45)")
 	end
 	
 	if slots then
@@ -195,11 +195,16 @@ end
 local defaultGroups = {oddly_breakable_by_hand = 1}
 function sb2.registerScriptblock(id, def)
 	def.description = def.description or def.sb2_label .. " Scriptblock"
-	def.groups = def.groups or defaultGroups
 	
-	if def.sb2_add_groups then
+	local customGroups = def.groups
+	
+	def.groups = customGroups or {}
+	if not customGroups or def.sb2_add_groups then
 		for k, v in pairs(defaultGroups) do
 			def.groups[k] = def.groups[k] or v
+		end
+		if def.sb2_deprecated then
+			def.groups.not_in_creative_inventory = 1
 		end
 	end
 	
@@ -218,7 +223,7 @@ function sb2.registerScriptblock(id, def)
 		end
 	end
 	
-	def.tiles = def.tiles or sb2.makeTiles(def.sb2_color, def.sb2_icon, def.sb2_slotted_faces)
+	def.tiles = def.tiles or sb2.makeTiles(def.sb2_color, def.sb2_icon, def.sb2_slotted_faces, def.sb2_deprecated)
 	
 	if def.sb2_explanation then
 		local expDef = def.sb2_explanation
