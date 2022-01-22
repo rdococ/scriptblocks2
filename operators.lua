@@ -326,7 +326,8 @@ sb2.registerScriptblock("scriptblocks2:and", {
 		end
 		
 		if not frame:getArg(1) then return process:report(frame:getArg(1)) end
-		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		process:pop()
+		return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:or", {
@@ -357,6 +358,7 @@ sb2.registerScriptblock("scriptblocks2:or", {
 		end
 		
 		if frame:getArg(1) then return process:report(frame:getArg(1)) end
-		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		process:pop()
+		return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 	end,
 })

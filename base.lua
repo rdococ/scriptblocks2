@@ -84,7 +84,8 @@ function sb2.simple_action(def)
 			
 			def.action(pos, node, process, frame, context, unpack(frame:getArguments()))
 			
-			return process:replace(sb2.Frame:new(vector.add(pos, type(cont) == "string" and dirs[cont] or cont), context))
+			process:pop()
+			return process:push(sb2.Frame:new(vector.add(pos, type(cont) == "string" and dirs[cont] or cont), context))
 		end
 		
 		return process:report(def.action(pos, node, process, frame, context, unpack(frame:getArguments())))

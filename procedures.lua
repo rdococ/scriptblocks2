@@ -63,6 +63,8 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
+		process:pop()
+		
 		if frame:getArg("call") then
 			local meta = minetest.get_meta(pos)
 			
@@ -74,9 +76,9 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 			procContext:declareVar(meta:get_string("parameter1"), frame:getArg(1))
 			procContext:declareVar(meta:get_string("parameter2"), frame:getArg(2))
 			
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), procContext))
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), procContext))
 		else
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		end
 	end,
 	
@@ -222,7 +224,7 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 		local procedure = meta:get_string("procedure")
 		
 		local procedureDef = findProcedure(procedure, context:getOwner())
-		if not procedureDef then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+		if not procedureDef then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 		
 		local procPos = procedureDef.pos
 		
@@ -246,7 +248,8 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 			return process:push(procFrame)
 		end
 		
-		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		process:pop()
+		return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:call_procedure", {
@@ -296,7 +299,8 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 		procFrame:setArg(1, frame:getArg(1))
 		procFrame:setArg(2, frame:getArg(2))
 		
-		return process:replace(procFrame)
+		process:pop()
+		return process:push(procFrame)
 	end,
 })
 

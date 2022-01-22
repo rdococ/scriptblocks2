@@ -27,10 +27,11 @@ sb2.registerScriptblock("scriptblocks2:if", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		
+		process:pop()
 		if frame:getArg("condition") then
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		else
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.left), context))
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.left), context))
 		end
 	end
 })
@@ -61,7 +62,8 @@ sb2.registerScriptblock("scriptblocks2:wait", {
 		end
 		
 		if t - frame:getArg("start") >= sb2.toNumber(frame:getArg("duration")) then
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+			process:pop()
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		else
 			return process:yield()
 		end

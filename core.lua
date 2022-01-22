@@ -35,8 +35,6 @@ Methods:
 	
 	push(frame)
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
-	replace(frame)
-		Replaces the topmost frame with a new one; i.e. the new frame replaces the current frame completely. This is equivalent to a tail-recursive call.
 	
 	report(value)
 		Pops the current frame, returning control to the previous frame, and a reported value along with it. This is like returning from a function call.
@@ -44,7 +42,7 @@ Methods:
 		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
 	
 	pop()
-		Pops the current frame without providing a value. May be used for more complex tail calls, or replacing a frame with a different type of frame before evaluating something on top of it.
+		Pops the current frame without providing a value. May be used for tail calls, or replacing a frame with a different type of frame before evaluating something on top of it.
 	jump(frame)
 		Transfers execution to the given frame without reporting a value to it.
 	
@@ -54,8 +52,6 @@ Methods:
 		Unwinds the call stack until a frame fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
 	pushAll(frame)
 		Equivalent to push(), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation.
-	replaceAll(frame)
-		Ditto, but for replace().
 	
 	step()
 		Performs one execution step.
@@ -176,10 +172,6 @@ function sb2.Process:push(frame)
 	frame:setParent(self.frame)
 	self.frame = frame
 end
-function sb2.Process:replace(frame)
-	frame:setParent(self.frame:getParent())
-	self.frame = frame
-end
 
 function sb2.Process:report(value)
 	return self:continue(self.frame:getParent(), value)
@@ -240,16 +232,6 @@ function sb2.Process:pushAll(frame)
 	end
 	
 	ancestor:setParent(self.frame)
-	self.frame = frame
-end
-function sb2.Process:replaceAll(frame)
-	local ancestor = frame
-	while true do
-		local newAncestor = ancestor:getParent()
-		if newAncestor then ancestor = newAncestor else break end
-	end
-	
-	ancestor:setParent(self.frame:getParent())
 	self.frame = frame
 end
 

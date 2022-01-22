@@ -65,16 +65,6 @@ function sb2.DelimitedContinuation:callClosure(process, context, arg)
 	frame:receiveArg(arg)
 	process:pushAll(frame)
 end
-function sb2.DelimitedContinuation:tailCallClosure(process, context, arg)
-	local frame = self.frame and self.frame:copy()
-	if not frame then return process:report(arg) end
-	
-	-- Replace this frame with a marker.
-	process:replace(sb2.DelimiterFrame:new(self.tag))
-	
-	frame:receiveArg(arg)
-	process:pushAll(frame)
-end
 
 function sb2.DelimitedContinuation:recordString(record)
 	return "<delimited continuation>"
@@ -118,7 +108,9 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		frame:selectArg("value")
 		
 		-- Replace this frame with a delimiter, and call the closure.
-		process:replace(sb2.DelimiterFrame:new(frame:getArg("tag")))
+		process:pop()
+		process:push(sb2.DelimiterFrame:new(frame:getArg("tag")))
+		
 		return closure:callClosure(process, context, nil)
 	end
 })
@@ -167,7 +159,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		if process:getFrame() then
 			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.
 			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
-			return closure:tailCallClosure(process, context, sb2.DelimitedContinuation:new(slice, tag))
+			process:pop()
 		end
 		return closure:callClosure(process, context, sb2.DelimitedContinuation:new(slice, tag))
 	end

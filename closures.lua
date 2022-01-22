@@ -20,10 +20,8 @@ Methods:
 	
 	callClosure(process, context, arg)
 		Performs a closure call. This generally pushes a new frame to the process's stack to evaluate the closure's body.
-	tailCallClosure(process, context, arg)
-		Performs a closure tail call. This replaces the current frame with a new one.
 
-If you are looking to extend scriptblocks2, you can register classes with their own callClosure/tailCallClosure methods and the 'run'/'call' blocks will automatically detect the presence of the method and run it when they encounter your custom data type.
+If you are looking to extend scriptblocks2, you can register classes with their own callClosure methods and the 'run'/'call' blocks will automatically detect the presence of the method and run it when they encounter your custom data type.
 ]]
 
 sb2.Closure = sb2.registerClass("closure")
@@ -50,17 +48,6 @@ function sb2.Closure:callClosure(process, context, arg)
 	frame:setArg(1, arg)
 	
 	return process:push(frame)
-end
-function sb2.Closure:tailCallClosure(process, context, arg)
-	local pos = self:getPos()
-	if not pos then return process:report(nil) end
-	
-	local frame = sb2.Frame:new(pos, context)
-	
-	frame:setArg("call", self)
-	frame:setArg(1, arg)
-	
-	return process:replace(frame)
 end
 
 function sb2.Closure:recordString(record)
@@ -208,7 +195,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			funcContext:setOwner(meta:get_string("owner"))
 			funcContext:declareVar(meta:get_string("parameter"), frame:getArg(1))
 			
-			return process:replace(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
+			process:pop()
+			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
 		else
 			local id = meta:get_string("id")
 			local closure = sb2.Closure:new(id, context)
@@ -251,9 +239,10 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.tailCallClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
 		
-		return closure:tailCallClosure(process, context, frame:getArg(1))
+		process:pop()
+		return closure:callClosure(process, context, frame:getArg(1))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:run_closure", {
@@ -287,12 +276,13 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local closure = frame:getArg("closure")
-			if type(closure) ~= "table" or not closure.callClosure then return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if type(closure) ~= "table" or not closure.callClosure then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
 			return closure:callClosure(process, context, frame:getArg(1))
 		end
 		
-		return process:replace(sb2.Frame:new(vector.add(pos, dirs.front), context))
+		process:pop()
+		return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 	end,
 })
 
