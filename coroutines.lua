@@ -36,36 +36,36 @@ function sb2.CoroutineStartFrame:getContext()
 end
 
 
-sb2.CoroutineFrame = sb2.registerClass("coroutineFrame")
+sb2.CoroutineDelimiterFrame = sb2.registerClass("coroutineDelimiterFrame")
 
-function sb2.CoroutineFrame:initialize(coro)
+function sb2.CoroutineDelimiterFrame:initialize(coro)
 	self.coroutine = coro
 	
 	self.parent = nil
 	self.arg = nil
 end
 
-function sb2.CoroutineFrame:copy()
+function sb2.CoroutineDelimiterFrame:copy()
 	local newFrame = self:getClass():new()
 	newFrame.coroutine = self.coroutine
 	newFrame.parent = self.parent and self.parent:copy()
 end
-function sb2.CoroutineFrame:step(process)
+function sb2.CoroutineDelimiterFrame:step(process)
 	self.coroutine:hasDied()
 	return process:report(self.arg)
 end
-function sb2.CoroutineFrame:receiveArg(arg)
+function sb2.CoroutineDelimiterFrame:receiveArg(arg)
 	self.arg = arg
 end
 
-function sb2.CoroutineFrame:getParent()
+function sb2.CoroutineDelimiterFrame:getParent()
 	return self.parent
 end
-function sb2.CoroutineFrame:setParent(parent)
+function sb2.CoroutineDelimiterFrame:setParent(parent)
 	self.parent = parent
 end
 
-function sb2.CoroutineFrame:getDelimiteeCoroutine()
+function sb2.CoroutineDelimiterFrame:getDelimiteeCoroutine()
 	return self.coroutine
 end
 
@@ -75,20 +75,25 @@ sb2.Coroutine = sb2.registerClass("Coroutine")
 function sb2.Coroutine:initialize(frame)
 	self.frame = frame
 	self.process = setmetatable({}, {__mode = "k"})
+	self.dead = false
+end
+function sb2.Coroutine:copy()
+	if self.process[1] and not self.process[1]:isHalted() then return end
+	
+	local copy = self:getClass():new(self.frame and self.frame:copy())
+	copy.dead = self.dead
 end
 
 function sb2.Coroutine:resume(process, arg)
-	local frame = self.frame
-	if self.process[1] and not self.process[1]:isHalted() or not frame then return process:continue(process:getFrame(), nil) end
+	if self.process[1] and not self.process[1]:isHalted() or self.dead then return process:receiveArg(nil) end
 	
 	self.process[1] = process
 	
-	process:push(sb2.CoroutineFrame:new(self))
+	process:push(sb2.CoroutineDelimiterFrame:new(self))
 	
-	frame:receiveArg(arg)
-	process:pushAll(frame)
+	process:pushAll(self.frame)
+	return process:receiveArg(arg)
 end
-
 function sb2.Coroutine:callClosure(process, context, arg)
 	return self:resume(process, arg)
 end
@@ -104,7 +109,7 @@ end
 function sb2.Coroutine:getState()
 	if self.process[1] and not self.process[1]:isHalted() then
 		return "running"
-	elseif self.frame then
+	elseif not self.dead then
 		return "suspended"
 	else
 		return "dead"
@@ -114,6 +119,7 @@ end
 function sb2.Coroutine:hasDied()
 	self.frame = nil
 	self.process[1] = nil
+	self.dead = true
 end
 
 function sb2.Coroutine:recordString(record)
