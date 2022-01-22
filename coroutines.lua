@@ -18,7 +18,7 @@ function sb2.CoroutineStartFrame:copy()
 end
 function sb2.CoroutineStartFrame:step(process)
 	process:pop()
-	return self.closure:callClosure(process, self.context, self.arg)
+	return self.closure:doCall(process, self.context, self.arg)
 end
 function sb2.CoroutineStartFrame:receiveArg(arg)
 	self.arg = arg
@@ -86,7 +86,7 @@ function sb2.Coroutine:copy()
 	return copy
 end
 
-function sb2.Coroutine:resume(process, arg)
+function sb2.Coroutine:doResume(process, arg)
 	if self.process[1] and not self.process[1]:isHalted() or self.finished then return process:receiveArg(nil) end
 	
 	self.process[1] = process
@@ -96,11 +96,11 @@ function sb2.Coroutine:resume(process, arg)
 	process:pushAll(self.frame)
 	return process:receiveArg(arg)
 end
-function sb2.Coroutine:callClosure(process, context, arg)
-	return self:resume(process, arg)
+function sb2.Coroutine:doCall(process, context, arg)
+	return self:doResume(process, arg)
 end
 
-function sb2.Coroutine:yield(process, value)
+function sb2.Coroutine:doYield(process, value)
 	if process ~= self.process[1] then return end
 	
 	self.frame = process:unwind(function (f) return f.getDelimiteeCoroutine and f:getDelimiteeCoroutine() == self end)
@@ -156,7 +156,7 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
 		local coro = sb2.Coroutine:new(sb2.CoroutineStartFrame:new(context, closure))
 		return process:report(coro)
@@ -192,10 +192,10 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 		local delimiter = process:find(function (f) return f.getDelimiteeCoroutine end)
 		local coro = delimiter and delimiter:getDelimiteeCoroutine()
 		
-		if type(coro) ~= "table" or not coro.yield then return process:report(nil) end
+		if type(coro) ~= "table" or not coro.doYield then return process:report(nil) end
 		
 		process:pop()
-		return coro:yield(process, frame:getArg("arg"))
+		return coro:doYield(process, frame:getArg("arg"))
 	end
 })
 

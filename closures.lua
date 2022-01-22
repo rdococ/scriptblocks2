@@ -18,10 +18,10 @@ Methods:
 	getContext()
 		Returns the context, consisting of variables from this closure's lexical scope.
 	
-	callClosure(process, context, arg)
+	doCall(process, context, arg)
 		Performs a closure call. This generally pushes a new frame to the process's stack to evaluate the closure's body.
 
-If you are looking to extend scriptblocks2, you can register classes with their own callClosure methods and the 'run'/'call' blocks will automatically detect the presence of the method and run it when they encounter your custom data type.
+If you are looking to extend scriptblocks2, you can register classes with their own doCall methods and the 'run'/'call' blocks will automatically detect the presence of the method and run it when they encounter your custom data type.
 ]]
 
 sb2.Closure = sb2.registerClass("closure")
@@ -38,7 +38,7 @@ function sb2.Closure:getContext()
 	return self.context
 end
 
-function sb2.Closure:callClosure(process, context, arg)
+function sb2.Closure:doCall(process, context, arg)
 	local pos = self:getPos()
 	if not pos then return process:continue(process:getFrame(), nil) end
 	
@@ -239,10 +239,10 @@ sb2.registerScriptblock("scriptblocks2:call_closure", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
 		process:pop()
-		return closure:callClosure(process, context, frame:getArg(1))
+		return closure:doCall(process, context, frame:getArg(1))
 	end,
 })
 sb2.registerScriptblock("scriptblocks2:run_closure", {
@@ -276,9 +276,9 @@ sb2.registerScriptblock("scriptblocks2:run_closure", {
 			frame:selectArg("value")
 			
 			local closure = frame:getArg("closure")
-			if type(closure) ~= "table" or not closure.callClosure then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+			if type(closure) ~= "table" or not closure.doCall then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 			
-			return closure:callClosure(process, context, frame:getArg(1))
+			return closure:doCall(process, context, frame:getArg(1))
 		end
 		
 		process:pop()

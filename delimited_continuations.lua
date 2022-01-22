@@ -55,7 +55,7 @@ function sb2.DelimitedContinuation:initialize(frame, tag)
 	self.tag = tag
 end
 
-function sb2.DelimitedContinuation:callClosure(process, context, arg)
+function sb2.DelimitedContinuation:doCall(process, context, arg)
 	local frame = self.frame and self.frame:copy()
 	if not frame then return process:continue(process:getFrame(), arg) end
 	
@@ -103,7 +103,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
 		frame:selectArg("value")
 		
@@ -111,7 +111,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		process:pop()
 		process:push(sb2.DelimiterFrame:new(frame:getArg("tag")))
 		
-		return closure:callClosure(process, context, nil)
+		return closure:doCall(process, context, nil)
 	end
 })
 
@@ -148,7 +148,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
 		local tag = frame:getArg("tag")
 		
@@ -161,6 +161,6 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
 			process:pop()
 		end
-		return closure:callClosure(process, context, sb2.DelimitedContinuation:new(slice, tag))
+		return closure:doCall(process, context, sb2.DelimitedContinuation:new(slice, tag))
 	end
 })

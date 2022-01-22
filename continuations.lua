@@ -64,10 +64,10 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		end
 		
 		local closure = frame:getArg("closure")
-		if type(closure) ~= "table" or not closure.callClosure then return process:report(nil) end
+		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
 		process:pop()
-		return closure:callClosure(process, context, sb2.Continuation:new(frame:getParent()))
+		return closure:doCall(process, context, sb2.Continuation:new(frame:getParent()))
 	end
 })
 
