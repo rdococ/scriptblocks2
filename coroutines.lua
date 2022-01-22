@@ -141,7 +141,7 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 			"A coroutine is a special kind of closure that can be paused and resumed.",
 			"A coroutine can pause itself with 'Call/Run Out Of Coroutine', reporting back to its caller.",
 			"The caller can resume the coroutine, which will then continue from where it left off.",
-			"The coroutine starts out paused, so make sure to 'Call/Run Coroutine' to start it up.",
+			"The coroutine starts out paused, so make sure to 'Call/Run Into Coroutine' to start it up.",
 		},
 	},
 	
@@ -165,8 +165,8 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 	end
 })
 
-sb2.registerScriptblock("scriptblocks2:call_coroutine", {
-	sb2_label = "Call Coroutine",
+sb2.registerScriptblock("scriptblocks2:call_into_coroutine", {
+	sb2_label = "Call Into Coroutine",
 	
 	sb2_explanation = {
 		shortExplanation = "Resumes a coroutine and reports its next yielded value.",
@@ -199,8 +199,8 @@ sb2.registerScriptblock("scriptblocks2:call_coroutine", {
 		return coro:doCall(process, context, frame:getArg(1))
 	end,
 })
-sb2.registerScriptblock("scriptblocks2:run_coroutine", {
-	sb2_label = "Run Coroutine",
+sb2.registerScriptblock("scriptblocks2:run_into_coroutine", {
+	sb2_label = "Run Into Coroutine",
 	
 	sb2_explanation = {
 		shortExplanation = "Resumes a coroutine, and continues after the coroutine yields.",
