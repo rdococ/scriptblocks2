@@ -130,6 +130,17 @@ end
 sb2.registerScriptblock("scriptblocks2:create_coroutine", {
 	sb2_label = "Create Coroutine",
 	
+	sb2_explanation = {
+		shortExplanation = "Creates and reports a new coroutine.",
+		inputSlots = {
+			{"Right", "The closure for the coroutine to run."},
+		},
+		additionalPoints = {
+			"A coroutine is a special kind of closure that can pause itself and be resumed.",
+			"This coroutine will not start running immediately. Call it like a regular closure to resume it."
+		},
+	},
+	
 	sb2_color = sb2.colors.coroutines,
 	sb2_icon  = "sb2_icon_flag.png",
 	sb2_slotted_faces = {"right"},
@@ -152,6 +163,17 @@ sb2.registerScriptblock("scriptblocks2:create_coroutine", {
 
 sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 	sb2_label = "Yield From Coroutine",
+	
+	sb2_explanation = {
+		shortExplanation = "Pauses the current coroutine, passing a value back to the caller.",
+		inputSlots = {
+			{"Right", "The value to report back to the caller."},
+		},
+		additionalPoints = {
+			"When the coroutine is called again, it will continue from this point.",
+			"The value passed to that call will be reported by this block.",
+		},
+	},
 	
 	sb2_color = sb2.colors.coroutines,
 	sb2_icon  = "sb2_icon_pause.png",
@@ -177,6 +199,16 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 
 sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 	sb2_label = "Get Coroutine State",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports 'running', 'suspended' or 'dead' depending on the state of the given coroutine.",
+		inputSlots = {
+			{"Right", "The coroutine to check."},
+		},
+		additionalPoints = {
+			"Dead coroutines will report nil if they are resumed again.",
+		},
+	},
 	
 	sb2_color = sb2.colors.coroutines,
 	sb2_icon  = "sb2_icon_is_process_running.png",
