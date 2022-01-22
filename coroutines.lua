@@ -82,6 +82,8 @@ function sb2.Coroutine:copy()
 	
 	local copy = self:getClass():new(self.frame and self.frame:copy())
 	copy.dead = self.dead
+	
+	return copy
 end
 
 function sb2.Coroutine:resume(process, arg)
@@ -227,4 +229,31 @@ sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 		
 		return process:report(coro:getState())
 	end
+})
+
+sb2.registerScriptblock("scriptblocks2:clone_coroutine", {
+	sb2_label = "Clone Coroutine",
+	
+	sb2_explanation = {
+		shortExplanation = "Reports a clone of the given coroutine.",
+		inputSlots = {
+			{"Right", "The coroutine to clone."},
+		},
+		additionalPoints = {
+			"Any variables, lists, etc. are shared between the original and the clone - this may result in very strange effects!",
+			"Running coroutines cannot currently be cloned.",
+		},
+	},
+	
+	sb2_color = sb2.colors.coroutines,
+	sb2_icon  = "sb2_icon_clone.png",
+	sb2_slotted_faces = {"right"},
+	
+	sb2_action = sb2.simple_action {
+		arguments = {"right"},
+		action = function (pos, node, process, frame, context, coro)
+			if type(coro) ~= "table" or not coro.copy then return end
+			return coro:copy()
+		end
+	}
 })
