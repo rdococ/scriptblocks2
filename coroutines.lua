@@ -51,7 +51,7 @@ function sb2.CoroutineDelimiterFrame:copy()
 	newFrame.parent = self.parent and self.parent:copy()
 end
 function sb2.CoroutineDelimiterFrame:step(process)
-	self.coroutine:hasDied()
+	self.coroutine:hasFinished()
 	return process:report(self.arg)
 end
 function sb2.CoroutineDelimiterFrame:receiveArg(arg)
@@ -75,19 +75,19 @@ sb2.Coroutine = sb2.registerClass("Coroutine")
 function sb2.Coroutine:initialize(frame)
 	self.frame = frame
 	self.process = setmetatable({}, {__mode = "k"})
-	self.dead = false
+	self.finished = false
 end
 function sb2.Coroutine:copy()
 	if self.process[1] and not self.process[1]:isHalted() then return end
 	
 	local copy = self:getClass():new(self.frame and self.frame:copy())
-	copy.dead = self.dead
+	copy.finished = self.finished
 	
 	return copy
 end
 
 function sb2.Coroutine:resume(process, arg)
-	if self.process[1] and not self.process[1]:isHalted() or self.dead then return process:receiveArg(nil) end
+	if self.process[1] and not self.process[1]:isHalted() or self.finished then return process:receiveArg(nil) end
 	
 	self.process[1] = process
 	
@@ -111,17 +111,17 @@ end
 function sb2.Coroutine:getState()
 	if self.process[1] and not self.process[1]:isHalted() then
 		return "running"
-	elseif not self.dead then
-		return "suspended"
+	elseif not self.finished then
+		return "paused"
 	else
-		return "dead"
+		return "finished"
 	end
 end
 
-function sb2.Coroutine:hasDied()
+function sb2.Coroutine:hasFinished()
 	self.frame = nil
 	self.process[1] = nil
-	self.dead = true
+	self.finished = true
 end
 
 function sb2.Coroutine:recordString(record)
@@ -203,7 +203,7 @@ sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 	sb2_label = "Get Coroutine State",
 	
 	sb2_explanation = {
-		shortExplanation = "Reports 'running', 'suspended' or 'dead' depending on the state of the given coroutine.",
+		shortExplanation = "Reports 'running', 'paused' or 'finished' depending on the state of the given coroutine.",
 		inputSlots = {
 			{"Right", "The coroutine to check."},
 		},
