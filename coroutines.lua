@@ -378,6 +378,7 @@ sb2.registerScriptblock("scriptblocks2:clone_coroutine", {
 		},
 		additionalPoints = {
 			"Any variables, lists, etc. are shared between the original and the clone - this may result in very strange effects!",
+			"This block can be used to implement multi-shot continuations!",
 			"Running coroutines cannot currently be cloned.",
 		},
 	},
