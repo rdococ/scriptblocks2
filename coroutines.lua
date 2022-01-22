@@ -138,8 +138,10 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 			{"Right", "The closure for the coroutine to run."},
 		},
 		additionalPoints = {
-			"A coroutine is a special kind of closure that can pause itself and be resumed.",
-			"This coroutine will not start running immediately. Call it like a regular closure to resume it."
+			"A coroutine is a special kind of closure that can be paused and resumed.",
+			"A coroutine can pause itself with 'Call/Run Out Of Coroutine', reporting back to its caller.",
+			"The caller can resume the coroutine, which will then continue from where it left off.",
+			"The coroutine starts out paused, so make sure to 'Call/Run Coroutine' to start it up.",
 		},
 	},
 	
@@ -238,17 +240,17 @@ sb2.registerScriptblock("scriptblocks2:run_coroutine", {
 	end,
 })
 
-sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
-	sb2_label = "Yield From Coroutine",
+sb2.registerScriptblock("scriptblocks2:call_out_of_coroutine", {
+	sb2_label = "Call Out Of Coroutine",
 	
 	sb2_explanation = {
-		shortExplanation = "Pauses the current coroutine, passing a value back to the caller.",
+		shortExplanation = "Pauses the current coroutine, optionally reporting a value back to the caller.",
 		inputSlots = {
 			{"Right", "The value to report back to the caller."},
 		},
 		additionalPoints = {
 			"When the coroutine is resumed again, it will continue from this point.",
-			"When resumed, this block will report the value passed back to the coroutine.",
+			"This block will report the value passed back to the coroutine when resumed.",
 		},
 	},
 	
@@ -282,17 +284,18 @@ sb2.registerScriptblock("scriptblocks2:yield_from_coroutine", {
 		return coro:doYield(process, frame:getArg("arg"))
 	end
 })
-sb2.registerScriptblock("scriptblocks2:yield_from_coroutine_then_continue", {
-	sb2_label = "Yield From Coroutine Then Continue",
+sb2.registerScriptblock("scriptblocks2:run_out_of_coroutine", {
+	sb2_label = "Run Out Of Coroutine",
 	
 	sb2_explanation = {
-		shortExplanation = "Pauses the current coroutine, passing a value back to the caller, before continuing.",
+		shortExplanation = "Pauses the current coroutine, optionally reporting a value back to the caller.",
 		inputSlots = {
 			{"Right", "The value to report back to the caller."},
 			{"Front", "What to do when this coroutine is resumed."},
 		},
 		additionalPoints = {
 			"When the coroutine is resumed again, it will continue from this point.",
+			"This block will continue the script when the coroutine is resumed, without reporting any value.",
 		},
 	},
 	
