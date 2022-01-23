@@ -159,10 +159,10 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 			{"Right", "The closure for the coroutine to run."},
 		},
 		additionalPoints = {
-			"A coroutine is a special kind of closure that can be paused and resumed.",
-			"A coroutine can report back to its caller with 'Call/Run Out Of Coroutine', pausing itself in the process.",
-			"The caller can then resume the coroutine, which will continue from where it left off.",
-			"The coroutine starts out paused, so make sure to 'Call/Run Into Coroutine' to start it up!",
+			"A coroutine is a special kind of closure that can exit and then be re-entered later.",
+			"A coroutine can report back to its caller with 'Call/Run Out Of Coroutine', pausing itself.",
+			"The caller can then run/call back into the coroutine, which will continue from where it left off.",
+			"The coroutine starts out paused, so make sure to use 'Call/Run Into Coroutine' to start it up!",
 		},
 	},
 	
@@ -190,11 +190,14 @@ sb2.registerScriptblock("scriptblocks2:call_into_coroutine", {
 	sb2_label = "Call Into Coroutine",
 	
 	sb2_explanation = {
-		shortExplanation = "Resumes a coroutine and reports its next yielded value.",
+		shortExplanation = "Calls a coroutine until it next runs/calls out, and reports the value it called out with.",
 		inputSlots = {
-			{"Front", "The coroutine to resume."},
+			{"Front", "The coroutine to call."},
 			{"Right", "The value to pass to the coroutine."},
 		},
+		additionalPoints = {
+			"You cannot call into an already running coroutine!",
+		}
 	},
 	
 	sb2_color = sb2.colors.coroutines,
@@ -224,12 +227,15 @@ sb2.registerScriptblock("scriptblocks2:run_into_coroutine", {
 	sb2_label = "Run Into Coroutine",
 	
 	sb2_explanation = {
-		shortExplanation = "Resumes a coroutine, and continues after the coroutine yields.",
+		shortExplanation = "Runs a coroutine until it next runs/calls out.",
 		inputSlots = {
-			{"Left", "The coroutine to resume."},
+			{"Left", "The coroutine to run."},
 			{"Right", "The value to pass to the coroutine."},
-			{"Front", "What to do next."},
+			{"Front", "What to do afterwards."},
 		},
+		additionalPoints = {
+			"You cannot run into an already running coroutine!",
+		}
 	},
 	
 	sb2_color = sb2.colors.coroutines,
@@ -270,7 +276,7 @@ sb2.registerScriptblock("scriptblocks2:call_out_of_coroutine", {
 			{"Right", "The value to report back to the caller."},
 		},
 		additionalPoints = {
-			"When the coroutine is resumed again, it will continue from this point.",
+			"When the coroutine is resumed, it will continue from this point.",
 			"This block will report the value passed back to the coroutine when resumed.",
 		},
 	},
@@ -315,8 +321,8 @@ sb2.registerScriptblock("scriptblocks2:run_out_of_coroutine", {
 			{"Front", "What to do when this coroutine is resumed."},
 		},
 		additionalPoints = {
-			"When the coroutine is resumed again, it will continue from this point.",
-			"This block will continue the script when the coroutine is resumed, without reporting any value.",
+			"When the coroutine is resumed, it will continue from this point.",
+			"This block will continue the script when the coroutine is resumed without reporting any value.",
 		},
 	},
 	
@@ -366,7 +372,7 @@ sb2.registerScriptblock("scriptblocks2:get_coroutine_state", {
 			{"Right", "The coroutine to check."},
 		},
 		additionalPoints = {
-			"Finished coroutines will report nil if they are resumed again.",
+			"Finished coroutines cannot be ran/called back into.",
 		},
 	},
 	
