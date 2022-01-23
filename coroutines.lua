@@ -322,7 +322,7 @@ sb2.registerScriptblock("scriptblocks2:run_out_of_coroutine", {
 		},
 		additionalPoints = {
 			"When the coroutine is resumed, it will continue from this point.",
-			"This block will continue the script when the coroutine is resumed without reporting any value.",
+			"This block will continue the script when the coroutine is resumed.",
 		},
 	},
 	
@@ -404,7 +404,7 @@ sb2.registerScriptblock("scriptblocks2:clone_coroutine", {
 			{"Right", "The coroutine to clone."},
 		},
 		additionalPoints = {
-			"Any variables, lists, etc. are shared between the original and the clone - this may result in very strange effects!",
+			"Any variables, lists, etc. are shared between the original and the clone!",
 			"This can be used to implement multi-shot continuations!",
 			"Running coroutines cannot currently be cloned.",
 		},
