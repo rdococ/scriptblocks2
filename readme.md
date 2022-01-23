@@ -21,7 +21,7 @@ This mod is an experiment to see what kind of fully-fledged programming language
 * Introspective blocks.
 * Features slated for removal, such as continuations.
 
-These features can be accessed by enabling the 'Enable Experiments' setting. Some are merely for fun and will remain experimental, such as the introspective blocks. Other features are a work in progress and may be promoted to a proper feature in the future, such as spawnable processes. A few features, such as continuations, will be removed in the near future.
+These features can be accessed by enabling the 'Enable Experiments' setting. Some are merely for fun, other features may be included in the future, and a few features such as continuations will be removed in the future.
 
 # Examples
 
