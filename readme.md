@@ -9,6 +9,7 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 * Lexically scoped variables.
 * Custom, named procedures with up to 2 named parameters.
 * First-class lists, dictionaries, and closures with up to 1 named parameter.
+* Coroutines, which can be cloned to implement multi-shot delimited continuations.
 * Processes can persist for more than one tick.
 * Ability to interface with digiline networks.
 
@@ -16,11 +17,11 @@ This mod is an experiment to see what kind of fully-fledged programming language
 
 # Experiments
 
-* First-class processes
-* Full, asymmetric, cloneable coroutines
-* Introspective 'fun' blocks
+* Spawnable processes.
+* Introspective blocks.
+* Features slated for removal, such as continuations.
 
-These features can be accessed by enabling the 'Enable Experiments' setting. They are not ready for use yet, and may be changed in the future.
+These features can be accessed by enabling the 'Enable Experiments' setting. Some are merely for fun and will remain experimental, such as the introspective blocks. Other features are a work in progress and may be promoted to a proper feature in the future, such as spawnable processes. A few features, such as continuations, will be removed in the near future.
 
 # Examples
 
