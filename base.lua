@@ -36,9 +36,15 @@ Functions:
 				The icon to be displayed on the top face of the scriptblock.
 			sb2_slotted_faces
 				A list of faces to be overlayed with slots.
+			
 			sb2_input_name, sb2_input_label, sb2_input_default
 				The name of the metadata field used to store the input; the human-readable label for the input; and the input's default value. Automatically creates a formspec allowing users to enter a value for the input, and displays the input value in infotext.
 				Scriptblocks with multiple input values or complex validation can still do it manually.
+			
+			sb2_deprecated
+				If true, this block will be given a red outline and hidden from the creative inventory. Continuations are slated for removal, so they have sb2_deprecated set to true.
+			sb2_add_groups
+				If true, groups such as oddly_breakable_by_hand (and not_in_creative_inventory for deprecated blocks) will be added even if a custom group table has been provided.
 		
 		Can be used by any registered node:
 			sb2_action(pos, node, process, frame, context)
