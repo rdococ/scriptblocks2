@@ -212,6 +212,7 @@ end
 
 function sb2.Process:unwind(criteria)
 	local topFrame, markedFrame, afterFrame = self.frame, self.frame
+	local data = {}
 	
 	while markedFrame and (not criteria or not criteria(markedFrame)) do
 		if markedFrame and markedFrame.unwound then
@@ -221,7 +222,7 @@ function sb2.Process:unwind(criteria)
 				afterFrame:setParent(nil)
 			end
 			
-			markedFrame:unwound(partialSlice)
+			markedFrame:unwound(partialSlice, data)
 			
 			if afterFrame then
 				afterFrame:setParent(markedFrame)
@@ -367,7 +368,7 @@ Frame
 
 A frame is a single unit of evaluation in a scriptblocks2 program. A frame stores the position of the node it is evaluating, the context of variables it is doing so in, and the parent frame which it will eventually report back to. It also stores a set of arguments, temporary storage where scriptblocks can store values for later evaluation steps or receive values reported from elsewhere.
 
-Extensions may define their own types of frame to implement completely custom behaviours. When interacting with frames outside the current frame, scriptblocks can only be sure that the basic methods exist.
+Extensions may define their own types of frame to implement custom behaviours. When interacting with frames outside the current frame, scriptblocks can only be sure that the basic methods exist.
 
 Basic interface:
 	These are methods that must be implemented by all types of frame.
@@ -386,9 +387,11 @@ Basic interface:
 	step(process)
 		Runs an execution step. The default frame type attempts to load the node at its position, and runs its sb2_action property to decide what to do.
 	
-	unwound(slice)
+	unwound(slice, data)
 	rewound(process)
 		These two methods are called when your frame is unwound or rewound respectively. Coroutines use this to yield when a continuation jumps out of them, and to make sure they aren't already running when a continuation jumps into them.
+		'data' is a table passed to every frame along the way. Coroutines use this to coordinate - if a continuation jumps out of two coroutines, the inner coroutine will set data.coroutineFrame. The outer coroutine will be able to see it, and only save the stack up to the start of the inner coroutine. This ensures that coroutines don't save frames belonging to other coroutines, which causes odd behaviour.
+		These two methods are optional - the default frame type doesn't implement them.
 
 Frame interface:
 	These are methods that this type of frame implements for scriptblocks to use. Other types of frame don't have to implement these.

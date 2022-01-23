@@ -71,8 +71,11 @@ function sb2.CoroutineDelimiterFrame:getDelimiteeCoroutine()
 	return self.coroutine
 end
 
-function sb2.CoroutineDelimiterFrame:unwound(slice)
-	self.coroutine:forceYield(slice)
+function sb2.CoroutineDelimiterFrame:unwound(slice, data)
+	-- If another coroutine has already been unwound, cap our slice so we don't resume any of their frames.
+	-- TODO: We could create a new CoroutineResumeFrame to resume the coroutine we've been forced out of
+	self.coroutine:forceYield(data.coroutineFrame and data.coroutineFrame:getParent() or slice)
+	data.coroutineFrame = self
 end
 function sb2.CoroutineDelimiterFrame:rewound(process)
 	return self.coroutine:forceResume(process)
