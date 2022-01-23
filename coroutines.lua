@@ -49,6 +49,8 @@ function sb2.CoroutineDelimiterFrame:copy()
 	local newFrame = self:getClass():new()
 	newFrame.coroutine = self.coroutine
 	newFrame.parent = self.parent and self.parent:copy()
+	
+	return newFrame
 end
 function sb2.CoroutineDelimiterFrame:step(process)
 	self.coroutine:hasFinished()
@@ -67,6 +69,13 @@ end
 
 function sb2.CoroutineDelimiterFrame:getDelimiteeCoroutine()
 	return self.coroutine
+end
+
+function sb2.CoroutineDelimiterFrame:unwound(slice)
+	self.coroutine:forceYield(slice)
+end
+function sb2.CoroutineDelimiterFrame:rewound(process)
+	return self.coroutine:forceResume(process)
 end
 
 
@@ -88,12 +97,11 @@ end
 
 function sb2.Coroutine:doResume(process, arg)
 	if self.process[1] and not self.process[1]:isHalted() or self.finished then return process:receiveArg(nil) end
-	
 	self.process[1] = process
 	
 	process:push(sb2.CoroutineDelimiterFrame:new(self))
 	
-	process:pushAll(self.frame)
+	process:rewind(self.frame)
 	return process:receiveArg(arg)
 end
 function sb2.Coroutine:doCall(process, context, arg)
@@ -116,6 +124,16 @@ function sb2.Coroutine:getState()
 	else
 		return "finished"
 	end
+end
+
+function sb2.Coroutine:forceYield(slice)
+	self.frame = slice:copy()
+	self.process[1] = nil
+end
+function sb2.Coroutine:forceResume(process)
+	-- If this coroutine is already running, you can't rewind into it!
+	if self.process[1] then return true end
+	self.process[1] = process
 end
 
 function sb2.Coroutine:hasFinished()

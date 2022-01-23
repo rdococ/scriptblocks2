@@ -20,18 +20,16 @@ invokeContinuation should not report back to the frame that called it.
 sb2.Continuation = sb2.registerClass("continuation")
 
 function sb2.Continuation:initialize(frame)
-	local frame = frame and frame:copy()
-	self.frame = frame
+	self.frame = frame and frame:copy()
 end
 function sb2.Continuation:invokeContinuation(process, arg)
-	local frame = self.frame
-	frame = frame and frame:copy()
+	-- Unwind the entire stack, as this is an undelimited continuation
+	process:unwind()
+	-- Rewind from the very bottom
+	process:rewind(self.frame and self.frame:copy())
 	
-	if frame then
-		frame:receiveArg(arg)
-	end
-	
-	return process:continue(frame, arg)
+	-- Continue
+	return process:receiveArg(arg)
 end
 function sb2.Continuation:recordString(record)
 	return "<continuation>"

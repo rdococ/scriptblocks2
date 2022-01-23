@@ -57,13 +57,13 @@ end
 
 function sb2.DelimitedContinuation:doCall(process, context, arg)
 	local frame = self.frame and self.frame:copy()
-	if not frame then return process:continue(process:getFrame(), arg) end
+	if not frame then return process:receiveArg(arg) end
 	
 	-- Push a delimiter frame here.
 	process:push(sb2.DelimiterFrame:new(self.tag))
 	
 	frame:receiveArg(arg)
-	process:pushAll(frame)
+	process:rewind(frame)
 end
 
 function sb2.DelimitedContinuation:recordString(record)

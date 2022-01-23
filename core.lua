@@ -46,17 +46,16 @@ Methods:
 	report(value)
 		Pops the current frame and provides a value to the previous frame. This is like returning from a function call.
 		This is equivalent to pop(); receiveArg(value), but it is very commonly used.
-	continue(frame, value)
-		Transfers execution to the given frame, reporting a value to it in the process. This is like a non-local return, or invoking a continuation.
-		This is equivalent to jump(frame); receiveArg(value), but it has been kept for similar reasons as report(value).
 	
 	find(criteria)
 		Finds the nearest call stack frame that fits the specified criteria.
 	unwind(criteria)
-		Unwinds the call stack until a frame fits the specified criteria. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
-	
-	pushAll(frame)
-		Similar to push(frame), but pushes the entire call stack slice onto the stack (frame, its parent, etc). This is equivalent to invoking a delimited continuation. If 'frame' is nil, this is interpreted as a call stack slice of 0 frames and nothing is done.
+		Unwinds the call stack until a frame fits the specified criteria, returning the resulting captured slice. The unwound slice *excludes* the marked frame. This is like throwing an exception, and the return value is similar to a delimited continuation.
+		The unwound(slice) method is called on each frame (where it is present) in the order of unwinding (from the top frame downwards). This is used by coroutines to force themselves to yield when some other mechanism transfers control away from them. The 'slice' in these method calls is a partial slice that stops short of the current frame - however, it will be mutated into the full captured slice, so frames looking to save these partial slices should copy them first.
+		If criteria is not present, then the whole call stack will be unwound. This is done when a process is halted so all running coroutines (and other things) have a chance to pause themselves.
+	rewind(frame)
+		Rewinds the captured slice back onto the call stack. The rewound(process) method is called on each frame (where it is present) in the reverse order of rewinding (so from frame downwards). If a frame returns 'true', the slice will 'crash' and be cut off there - this is used by coroutines to prevent rewinding into an already running coroutine.
+		If the frame is not present, it is interpreted as an empty slice and nothing is done.
 	
 	step()
 		Performs one execution step.
@@ -196,13 +195,8 @@ function sb2.Process:receiveArg(value)
 		end
 	end
 end
-
 function sb2.Process:report(value)
 	self:pop()
-	return self:receiveArg(value)
-end
-function sb2.Process:continue(frame, value)
-	self:jump(frame)
 	return self:receiveArg(value)
 end
 
@@ -215,10 +209,25 @@ function sb2.Process:find(criteria)
 	
 	return markedFrame
 end
+
 function sb2.Process:unwind(criteria)
-	local oldFrame, markedFrame, afterFrame = self.frame, self.frame
+	local topFrame, markedFrame, afterFrame = self.frame, self.frame
 	
-	while markedFrame and not criteria(markedFrame) do
+	while markedFrame and (not criteria or not criteria(markedFrame)) do
+		if markedFrame and markedFrame.unwound then
+			local partialSlice
+			if afterFrame then
+				partialSlice = topFrame
+				afterFrame:setParent(nil)
+			end
+			
+			markedFrame:unwound(partialSlice)
+			
+			if afterFrame then
+				afterFrame:setParent(markedFrame)
+			end
+		end
+		
 		afterFrame = markedFrame
 		markedFrame = markedFrame:getParent()
 	end
@@ -230,19 +239,31 @@ function sb2.Process:unwind(criteria)
 		self:jump(nil)
 	end
 	
-	return markedFrame ~= oldFrame and oldFrame or nil
+	return markedFrame ~= topFrame and topFrame or nil
 end
-function sb2.Process:pushAll(frame)
+function sb2.Process:rewind(frame)
 	if frame == nil then return end
 	
-	local ancestor = frame
+	local ancestor, newFrame = frame, frame
+	
 	while true do
+		if ancestor and ancestor.rewound then
+			local crash = ancestor:rewound(self)
+			if crash then
+				-- Crash - e.g. a coroutine is already running and thus cannot be resumed into
+				-- 'Cap' the rewind at this frame's parent, as it cannot be entered
+				newFrame = ancestor:getParent()
+			end
+		end
+		
 		local newAncestor = ancestor:getParent()
-		if newAncestor then ancestor = newAncestor else break end
+		if newAncestor then
+			ancestor = newAncestor
+		else break end
 	end
 	
 	ancestor:setParent(self.frame)
-	self.frame = frame
+	self.frame = newFrame
 end
 
 function sb2.Process:step()
@@ -281,6 +302,9 @@ end
 function sb2.Process:halt(reason)
 	if self.halted then return end
 	self.halted = reason or true
+	
+	-- Unwind the call stack. This gives a chance for e.g. coroutines to pause themselves.
+	self:unwind()
 	
 	if self.starter then
 		local starterInfo = sb2.Process.starterInfo[self.starter]
@@ -361,6 +385,10 @@ Basic interface:
 	
 	step(process)
 		Runs an execution step. The default frame type attempts to load the node at its position, and runs its sb2_action property to decide what to do.
+	
+	unwound(slice)
+	rewound(process)
+		These two methods are called when your frame is unwound or rewound respectively. Coroutines use this to yield when a continuation jumps out of them, and to make sure they aren't already running when a continuation jumps into them.
 
 Frame interface:
 	These are methods that this type of frame implements for scriptblocks to use. Other types of frame don't have to implement these.
