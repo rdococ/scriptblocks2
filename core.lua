@@ -292,10 +292,9 @@ function sb2.Process:step()
 			
 			self.memoryScanner = sb2.RecursiveIterator:new(self)
 			self.newMemoryUsage = 0
-			
-			if self.memoryUsage > maxMemory then
-				return self:halt("OutOfMemory")
-			end
+		end
+		if math.max(self.memoryUsage, self.newMemoryUsage) > maxMemory then
+			return self:halt("OutOfMemory")
 		end
 	end
 end
