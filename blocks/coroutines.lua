@@ -201,7 +201,7 @@ sb2.registerScriptblock("scriptblocks2:call_into_coroutine", {
 	},
 	
 	sb2_color = sb2.colors.coroutines,
-	sb2_icon  = "sb2_icon_invoke_continuation.png",
+	sb2_icon  = "sb2_icon_call_into_coroutine.png",
 	sb2_slotted_faces = {"right", "front"},
 	
 	sb2_action = function (pos, node, process, frame, context)
@@ -239,7 +239,7 @@ sb2.registerScriptblock("scriptblocks2:run_into_coroutine", {
 	},
 	
 	sb2_color = sb2.colors.coroutines,
-	sb2_icon  = "sb2_icon_run_coroutine.png",
+	sb2_icon  = "sb2_icon_run_into_coroutine.png",
 	sb2_slotted_faces = {"left", "right", "front"},
 	
 	sb2_action = function (pos, node, process, frame, context)
