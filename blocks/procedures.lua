@@ -82,7 +82,6 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		end
 	end,
 	
-	on_construct = generateDefProcFormspec,
 	after_place_node = function (pos, placer, itemstack, pointed_thing)
 		if not placer then return end
 		if not placer:is_player() then return end
@@ -92,6 +91,9 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		
 		meta:set_string("owner", owner)
 		meta:set_string("infotext", "Owner: " .. owner .. "\nNo procedure name set")
+		meta:set_string("public", "true")
+		
+		generateDefProcFormspec(pos)
 	end,
 	
 	on_receive_fields = function (pos, formname, fields, sender)
