@@ -46,7 +46,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation", {
 		additionalPoints = {
 			"This block calls a closure, passing a special 'continuation' value to it.",
 			"When this 'continuation' is invoked, the program jumps back to this point.",
-			"You should use the easier to understand coroutine mechanism instead. This block will be removed in the future.",
+			"You should use the simpler coroutine mechanism instead. This block will be removed in the future.",
 		}
 	},
 	
@@ -82,7 +82,7 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 			{"Right", "The value to invoke the continuation with."}
 		},
 		additionalPoints = {
-			"You should use the easier to understand coroutine mechanism instead. This block will be removed in the future.",
+			"You should use the simpler coroutine mechanism instead. This block will be removed in the future.",
 		}
 	},
 	

@@ -83,7 +83,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		},
 		additionalPoints = {
 			"This block defines the end of the continuations created by 'Call With Delimited Continuation' blocks with the same tag.",
-			"You should use the easier to understand coroutine mechanism instead. This block will be removed in the future.",
+			"You should use the simpler coroutine mechanism instead. This block will be removed in the future.",
 		}
 	},
 	
@@ -131,7 +131,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		additionalPoints = {
 			"This delimited continuation value can be called like a closure.",
 			"It runs the program from this block up until the end of the innermost delimiter block with the same tag value.",
-			"You should use the easier to understand coroutine mechanism instead. This block will be removed in the future.",
+			"You should use the simpler coroutine mechanism instead. This block will be removed in the future.",
 		}
 	},
 	
