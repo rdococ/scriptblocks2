@@ -240,7 +240,7 @@ function sb2.Process:unwind(criteria)
 		self:jump(nil)
 	end
 	
-	return markedFrame ~= topFrame and topFrame or nil
+	return markedFrame ~= topFrame and topFrame or nil, data
 end
 function sb2.Process:rewind(frame)
 	if frame == nil then return end
