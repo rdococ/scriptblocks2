@@ -15,7 +15,7 @@ This mod began as an experiment to see what kind of fully-fledged programming la
 # Features
 
 * Support for nested expressions and variables.
-* Custom, named procedures with up to 2 named parameters and dyamic scope.
+* Custom, named procedures with up to 2 named parameters and dynamic scoping.
 * First-class lists, dictionaries, and lexically scoped closures with up to 1 named parameter.
 * Coroutines, closures that can be paused and resumed.
 * Processes can run for more than one tick.
