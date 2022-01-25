@@ -17,11 +17,10 @@ This mod is an experiment to see what kind of fully-fledged programming language
 
 # Experiments
 
-* Spawnable processes.
-* Introspective blocks.
-* Features slated for removal, such as continuations.
+* Spawnable processes, enabling pre-emptive multitasking.
+* Introspective blocks for debug purposes, such as one to report a string representation of the call stack.
 
-These features can be accessed by enabling the 'Enable Experiments' setting. Some are merely for fun, other features may be included in the future, and a few features such as continuations will be removed in the future.
+These features can be accessed by enabling the 'Enable Experiments' setting.
 
 # Examples
 
