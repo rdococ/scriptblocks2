@@ -528,6 +528,11 @@ function sb2.Frame:requestNode()
 	end
 end
 
+function sb2.Frame:recordString(record)
+	record[self] = true
+	return string.format("<frame %s -> %s", minetest.get_node(self.pos).name, sb2.toString(self.parent, record))
+end
+
 
 --[[
 Context

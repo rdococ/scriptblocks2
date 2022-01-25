@@ -35,6 +35,11 @@ function sb2.CoroutineStartFrame:getContext()
 	return self.context
 end
 
+function sb2.CoroutineStartFrame:recordString(record)
+	record[self] = true
+	return string.format("<coroutine start frame -> %s", sb2.toString(self.parent, record))
+end
+
 
 sb2.CoroutineDelimiterFrame = sb2.registerClass("coroutineDelimiterFrame")
 
@@ -79,6 +84,11 @@ function sb2.CoroutineDelimiterFrame:unwound(slice, data)
 end
 function sb2.CoroutineDelimiterFrame:rewound(process)
 	return self.coroutine:forceResume(process)
+end
+
+function sb2.CoroutineDelimiterFrame:recordString(record)
+	record[self] = true
+	return string.format("<coroutine delimiter frame %s -> %s", sb2.toString(self.coroutine, record), sb2.toString(self.parent, record))
 end
 
 
