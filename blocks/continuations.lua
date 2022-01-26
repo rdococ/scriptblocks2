@@ -105,7 +105,7 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 		end
 		
 		local continuation = frame:getArg("continuation")
-		if type(continuation) ~= "table" or not continuation.invokeContinuation then return process:halt() end
+		if type(continuation) ~= "table" or not continuation.invokeContinuation then process:unwind(); return process:receiveArg(frame:getArg(1)) end
 		
 		return continuation:invokeContinuation(process, frame:getArg(1))
 	end
