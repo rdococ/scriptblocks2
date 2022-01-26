@@ -34,7 +34,7 @@ sb2.registerScriptblock("scriptblocks2:say", {
 })
 
 -- os.time() usually only has a resolution of 1s. Get it when the server starts, then add get_server_uptime for extra "accuracy" ;)
-sb2.serverStart = os.time() - os.time {year = 2000, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = false}
+sb2.serverStart = os.difftime(os.time(), os.time {year = 2000, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = false})
 
 sb2.registerScriptblock("scriptblocks2:get_seconds_since_2000", {
 	sb2_label = "Get Seconds Since 2000",
