@@ -111,7 +111,6 @@ function sb2.Process:stopAllProcessesFor(starter)
 	end
 	return n
 end
-
 function sb2.Process:stopProcessesFor(starter, head)
 	local n = 0
 	for process, _ in pairs(sb2.shallowCopy(sb2.Process.starterInfo[starter].processes)) do
@@ -144,7 +143,8 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	
 	self.frame = frame
 	
-	self.memoryScanner = sb2.RecursiveIterator:new(self)
+	self.memoryCriteria = function (x) return x.isProcess and x:isProcess() and not x:isHalted() end
+	self.memoryScanner = sb2.RecursiveIterator:new(self, self.memoryCriteria)
 	
 	self.memoryUsage = 0
 	self.newMemoryUsage = 0
@@ -156,6 +156,10 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
 	table.insert(sb2.Process.processList, self)
+end
+
+function sb2.Process:isProcess()
+	return true
 end
 
 function sb2.Process:getStarter()
@@ -290,7 +294,7 @@ function sb2.Process:step()
 		if not self.memoryScanner:hasNext() then
 			self.memoryUsage = self.newMemoryUsage
 			
-			self.memoryScanner = sb2.RecursiveIterator:new(self)
+			self.memoryScanner = sb2.RecursiveIterator:new(self, self.memoryCriteria)
 			self.newMemoryUsage = 0
 		end
 		if math.max(self.memoryUsage, self.newMemoryUsage) > maxMemory then

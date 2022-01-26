@@ -3,6 +3,11 @@ Recursive Iterator
 
 An object that iterates a table recursively. Does not use standard Lua iteration mechanism because this iterator is designed to be able to run across multiple Minetest ticks.
 
+Constructor:
+	new(object, criteria)
+		Creates a new recursive iterator to iterate through object and all of its descendants.
+		Objects where criteria(object) is truthy will not have their descendants traced (unless they are referenced elsewhere).
+
 Methods:
 	hasNext()
 		Returns true if there are more objects left to iterate through.
@@ -12,13 +17,15 @@ Methods:
 
 sb2.RecursiveIterator = sb2.registerClass("recursiveiterator")
 
-function sb2.RecursiveIterator:initialize(object)
+function sb2.RecursiveIterator:initialize(object, criteria)
 	self.traced = setmetatable({[self] = true}, {__mode = "k"})
 	self.traceQueue = {}
 	self.returnQueue = {object}
 	
 	self.currentObject = object
 	self.currentKey = nil
+	
+	self.criteria = criteria or function () return false end
 end
 
 function sb2.RecursiveIterator:hasNext()
@@ -46,7 +53,9 @@ function sb2.RecursiveIterator:next()
 		if not self.traced[k] then
 			if type(k) == "table" then
 				self.traced[k] = true
-				table.insert(self.traceQueue, k)
+				if not self.criteria(k) then
+					table.insert(self.traceQueue, k)
+				end
 			end
 			
 			table.insert(self.returnQueue, k)
@@ -54,7 +63,9 @@ function sb2.RecursiveIterator:next()
 		if not self.traced[v] then
 			if type(v) == "table" then
 				self.traced[v] = true
-				table.insert(self.traceQueue, v)
+				if not self.criteria(v) then
+					table.insert(self.traceQueue, v)
+				end
 			end
 			
 			table.insert(self.returnQueue, v)
