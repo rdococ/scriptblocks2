@@ -42,7 +42,7 @@ sb2.registerScriptblock("scriptblocks2:get_seconds_since_2000", {
 	sb2_explanation = {
 		shortExplanation = "Reports the number of seconds passed since the year 2000.",
 		additionalPoints = {
-			"If you save this value, you can subtract it to determine the number of seconds passed since you saved it.",
+			"If you store this value in a variable, you can subtract it to determine the number of seconds passed since you stored it.",
 		},
 	},
 	
