@@ -28,7 +28,7 @@ dofile(MP .. "/base.lua")
 -- These files implement the blocks available in Scriptblocks 2. They are organized into distinct 'categories'.
 dofile(MP .. "/blocks/special.lua")
 dofile(MP .. "/blocks/control.lua")
-dofile(MP .. "/blocks/output.lua")
+dofile(MP .. "/blocks/io.lua")
 dofile(MP .. "/blocks/operators.lua")
 dofile(MP .. "/blocks/variables.lua")
 dofile(MP .. "/blocks/lists.lua")
