@@ -79,10 +79,11 @@ record = {
 	nextIndex = 1, -- next unused index
 ]]
 function sb2.serialize(obj, record)
-	if type(obj) == "string" then return string.format("%q", obj) end
-	if type(obj) == "number" or type(obj) == "boolean" or type(obj) == "nil" then return tostring(obj) end
-	
 	local initialCall = not record
+	
+	if type(obj) == "string" then return string.format("%s%q", initialCall and "return " or "", obj) end
+	if type(obj) == "number" or type(obj) == "boolean" or type(obj) == "nil" then return (initialCall and "return " or "") .. tostring(obj) end
+	
 	if not record then record = {declarations = {}, definitions = {}, indices = {}, nextIndex = 1} end
 	
 	if type(obj) == "table" then
@@ -98,7 +99,7 @@ function sb2.serialize(obj, record)
 		record.nextIndex = record.nextIndex + 1
 		
 		if className then
-			if not obj.isSerializable or not obj:isSerializable() then return "nil" end
+			if not obj.isSerializable or not obj:isSerializable() then return initialCall and "return nil" or "nil" end
 			for k, v in pairs(obj) do
 				if not obj.shouldNotSerialize or obj:shouldNotSerialize(k) then
 					table.insert(record.definitions, string.format("%s[%s] = %s;\n", indexer, sb2.serialize(k, record), sb2.serialize(v, record)))
@@ -117,5 +118,5 @@ function sb2.serialize(obj, record)
 		end
 	end
 	
-	return "nil"
+	return initialCall and "return nil" or "nil"
 end
