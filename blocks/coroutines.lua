@@ -1,6 +1,6 @@
 sb2.colors.coroutines = "#fce762"
 
-sb2.CoroutineStartFrame = sb2.registerClass("CoroutineStartFrame")
+sb2.CoroutineStartFrame = sb2.registerClass("coroutineStartFrame")
 
 function sb2.CoroutineStartFrame:initialize(context, closure)
 	self.closure = closure
@@ -92,7 +92,7 @@ function sb2.CoroutineDelimiterFrame:recordString(record)
 end
 
 
-sb2.Coroutine = sb2.registerClass("Coroutine")
+sb2.Coroutine = sb2.registerClass("coroutine")
 
 function sb2.Coroutine:initialize(frame)
 	self.frame = frame
