@@ -559,37 +559,56 @@ Methods:
 		Gets the initial position of the context.
 	setHead(head)
 		Sets the initial position of the context.
+	
+	declareVar(varname, values)
+		Declares a new variable with the given variable name.
+	getVar(varname)
+		Returns the variable table with that name (a table of the form {value = ...}).
+	
+	getAttribute(attribute)
+		Gets an attribute of this context. Variables are stored in attributes named "variables:<varname>". Other attributes can be used to hold lexical information that can't be accessed by the variable blocks.
+		Owner and head are stored in the attributes "builtin:owner" and "builtin:head".
+	setAttribute(attribute, value)
+		Sets an attribute.
 ]]
 
 sb2.Context = sb2.registerClass("context")
 
 function sb2.Context:initialize(head, owner)
-	self.variables = {}
-	self.head = head
-	self.owner = owner
+	self.attributes = {}
 end
+
 function sb2.Context:copy()
 	local copy = self:getClass():new(self.head)
-	copy.variables = sb2.shallowCopy(self.variables)
+	copy.attributes = sb2.shallowCopy(self.attributes)
 	return copy
 end
-function sb2.Context:declareVar(varname, value)
-	self.variables[varname] = {value = value}
-end
-function sb2.Context:getVar(varname)
-	return self.variables[varname]
-end
+
 function sb2.Context:getOwner()
-	return self.owner
+	return self.attributes["builtin:owner"]
 end
 function sb2.Context:setOwner(owner)
-	self.owner = owner
+	self.attributes["builtin:owner"] = owner
 end
 function sb2.Context:getHead()
-	return self.head
+	return self.attributes["builtin:head"]
 end
 function sb2.Context:setHead(head)
-	self.head = head
+	self.attributes["builtin:head"] = head
+end
+
+function sb2.Context:declareVar(varname, value)
+	self.attributes["variables:" .. varname] = {value = value}
+end
+function sb2.Context:getVar(varname)
+	return self.attributes["variables:" .. varname]
+end
+
+function sb2.Context:getAttribute(varname)
+	return self.attributes[varname]
+end
+function sb2.Context:setAttribute(varname, value)
+	self.attribute[varname] = value
 end
 
 
