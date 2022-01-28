@@ -557,7 +557,7 @@ Methods:
 	setHead(head)
 		Sets the initial position of the context.
 	
-	declareVar(varname, values)
+	declareVar(varname, value)
 		Declares a new variable with the given variable name.
 	getVar(varname)
 		Returns the variable table with that name (a table of the form {value = ...}).
