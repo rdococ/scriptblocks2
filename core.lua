@@ -103,6 +103,8 @@ sb2.Process = sb2.registerClass("process")
 sb2.Process.processList = {}
 sb2.Process.starterInfo = {}
 
+sb2.Process.shouldNotScan = function (x) return x.isProcess and x:isProcess() and not x:isHalted() end
+
 function sb2.Process:stopAllProcessesFor(starter)
 	local n = 0
 	for process, _ in pairs(sb2.shallowCopy(sb2.Process.starterInfo[starter].processes)) do
@@ -143,8 +145,7 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	
 	self.frame = frame
 	
-	self.memoryCriteria = function (x) return x.isProcess and x:isProcess() and not x:isHalted() end
-	self.memoryScanner = sb2.RecursiveIterator:new(self, self.memoryCriteria)
+	self.memoryScanner = sb2.RecursiveIterator:new(self, self:getClass().shouldNotScan)
 	
 	self.memoryUsage = 0
 	self.newMemoryUsage = 0
@@ -294,7 +295,7 @@ function sb2.Process:step()
 		if not self.memoryScanner:hasNext() then
 			self.memoryUsage = self.newMemoryUsage
 			
-			self.memoryScanner = sb2.RecursiveIterator:new(self, self.memoryCriteria)
+			self.memoryScanner = sb2.RecursiveIterator:new(self, self:getClass().shouldNotScan)
 			self.newMemoryUsage = 0
 		end
 		if math.max(self.memoryUsage, self.newMemoryUsage) > maxMemory then
