@@ -547,10 +547,7 @@ A context is a lexical context within a scriptblocks2 program. Contexts store va
 Methods:
 	copy()
 		Copies the context, creating a new context which shares the same variables and head, but not owner. New variables declared in the original context do not transfer over to the copy, but if an existing variable is mutated, that change will be visible.
-	declareVar(varname, value)
-		Creates a new variable named varname in this context and sets its value.
-	getVar(varname)
-		Gets the variable object referred to by varname in this context. Use .value to set or get its value.
+	
 	getOwner()
 		Gets the player blamed for building the scriptblocks running in this context.
 	setOwner(owner)
