@@ -26,6 +26,8 @@ If you are looking to extend scriptblocks2, you can register classes with their 
 
 sb2.Closure = sb2.registerClass("closure")
 
+function sb2.Closure:isSerializable() return true end
+
 function sb2.Closure:initialize(id, context)
 	self.id = id
 	self.context = context:copy()

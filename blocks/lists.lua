@@ -35,6 +35,8 @@ function sb2.List:initialize()
 	self.items = {}
 end
 
+function sb2.List:isSerializable() return true end
+
 function sb2.List:getSize()
 	return #self.items
 end

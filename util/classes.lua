@@ -23,8 +23,11 @@
 	
 	object:getClass()
 		Returns the object's class, or nil if it is a plain Lua value.
+	
+	object:isSerializable()
+		Called to determine if this object can be serialized.
 	object:shouldNotSerialize(k)
-		Returns true if the field with this key should not be serialized.
+		Called to determine if a field with a specific key should not be serialized.
 ]]
 
 local classDefinitions = {}
@@ -95,6 +98,7 @@ function sb2.serialize(obj, record)
 		record.nextIndex = record.nextIndex + 1
 		
 		if className then
+			if not obj.isSerializable or not obj:isSerializable() then return "nil" end
 			for k, v in pairs(obj) do
 				if not obj.shouldNotSerialize or obj:shouldNotSerialize(k) then
 					table.insert(record.definitions, string.format("%s[%s] = %s;\n", indexer, sb2.serialize(k, record), sb2.serialize(v, record)))

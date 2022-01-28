@@ -25,6 +25,8 @@ function sb2.Dictionary:initialize()
 	self.size = 0
 end
 
+function sb2.Dictionary:isSerializable() return true end
+
 function sb2.Dictionary:getItem(key)
 	return self.entries[key]
 end
