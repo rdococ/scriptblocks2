@@ -12,9 +12,10 @@ function sb2.CoroutineStartFrame:initialize(context, closure)
 end
 
 function sb2.CoroutineStartFrame:copy()
-	local newFrame = self:getClass():new()
-	newFrame.closure = self.closure
+	local newFrame = self:getClass():new(self.context, self.closure)
 	newFrame.parent = self.parent and self.parent:copy()
+	
+	return newFrame
 end
 function sb2.CoroutineStartFrame:step(process)
 	process:pop()
