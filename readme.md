@@ -19,9 +19,9 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 
 These features can be accessed through the 'Enable Experiments' setting. Some of these features can cause a lot of lag, even with the limits that have been imposed. Others are only useful for debugging purposes. Either way, don't enable these on a server!
 
-## Principles
+## Findings
 
-This mod began as an experiment to see what kind of fully-fledged programming language you can design using nodes. I discovered that creating a language this way has unique advantages, and leaned into them to create a unique programming experience.
+This mod began as an experiment to see what kind of fully-fledged programming language you can design using nodes. I discovered that creating a language this way has unique advantages, and leaned into them.
 
 * Code reuse and cooperation. You can build a procedure and reuse it in any other script in that world, even if it's part of a completely different project. Other players can even use your procedure for their own scripts. This potential for free, live cooperation between programmers is unmatched by Scratch, Snap! or any other visual programming environments.
 * Complex control flow using simple abstractions. Using a custom call stack enables the implementation of powerful control flow mechanisms such as continuations. Coroutines are simply "suspendable procedures" - but when you can make clones of them, they are as powerful as multi-shot delimited continuations (in other words, *very* powerful!).
