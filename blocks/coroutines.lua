@@ -122,10 +122,10 @@ function sb2.Coroutine:doCall(process, context, arg)
 	return self:doResume(process, arg)
 end
 
-function sb2.Coroutine:doYield(process, value)
+function sb2.Coroutine:doYield(process, value, data)
 	if process ~= self.process[1] then return end
 	
-	self.frame = process:unwind(function (f) return f.getDelimiteeCoroutine and f:getDelimiteeCoroutine() == self end)
+	self.frame = data and data.coroutineFrame and data.coroutineFrame:getParent() or process:unwind(function (f) return f.getDelimiteeCoroutine and f:getDelimiteeCoroutine() == self end)
 	self.process[1] = nil
 	
 	return process:report(value)
