@@ -37,8 +37,6 @@ Methods:
 		Pushes the given frame onto the stack; i.e. the new frame is evaluated, and once finished, control returns to the current frame. Think of this like a function call.
 	pop()
 		Pops the current frame without providing a value. May be used for tail calls, or replacing a frame with a different type of frame before evaluating something on top of it.
-	jump(frame)
-		Transfers execution to the given frame without reporting a value to it.
 	
 	receiveArg(value)
 		Reports an evaluated value to the current evaluation frame, usually after it has requested to evaluate something.
@@ -184,9 +182,6 @@ end
 function sb2.Process:pop()
 	self.frame = self.frame:getParent()
 end
-function sb2.Process:jump(frame)
-	self.frame = frame
-end
 
 function sb2.Process:receiveArg(value)
 	if self.frame then
@@ -239,10 +234,10 @@ function sb2.Process:unwind(criteria)
 	end
 	
 	if markedFrame then
-		self:jump(markedFrame)
+		self.frame = markedFrame
 		if afterFrame then afterFrame:setParent(nil) end
 	else
-		self:jump(nil)
+		self.frame = nil
 	end
 	
 	return markedFrame ~= topFrame and topFrame or nil, data
