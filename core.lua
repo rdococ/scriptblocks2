@@ -605,13 +605,6 @@ function sb2.Context:setHead(head)
 	self.attributes["builtin:head"] = head
 end
 
-function sb2.Context:declareVar(varname, value)
-	self.attributes["variables:" .. varname] = {value = value}
-end
-function sb2.Context:getVar(varname)
-	return self.attributes["variables:" .. varname]
-end
-
 function sb2.Context:getAttribute(varname)
 	return self.attributes[varname]
 end

@@ -1,5 +1,12 @@
 sb2.colors.variables = "#f89110"
 
+function sb2.Context:declareVar(varname, value)
+	self.attributes["variables:" .. varname] = {value = value}
+end
+function sb2.Context:getVar(varname)
+	return self.attributes["variables:" .. varname]
+end
+
 sb2.registerScriptblock("scriptblocks2:declare_variable", {
 	sb2_label = "Declare Variable",
 	
