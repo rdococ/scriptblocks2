@@ -13,6 +13,11 @@
 	sb2.serialize(object)
 		Serializes a value. Supports both raw Lua values and class instances.
 	
+	sb2.classNamed(name)
+		Returns the class with the given name.
+	sb2.getClassName(obj)
+		Returns the name of the given object's class.
+	
 	class.name
 		Returns the canonical name of this class.
 	class:rawNew()
