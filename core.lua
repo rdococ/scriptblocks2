@@ -573,11 +573,22 @@ sb2.Context = sb2.registerClass("context")
 
 function sb2.Context:initialize(head, owner)
 	self.attributes = {}
+	
+	self:setHead(head)
+	self:setOwner(owner)
 end
 
 function sb2.Context:copy()
-	local copy = self:getClass():new(self.head)
-	copy.attributes = sb2.shallowCopy(self.attributes)
+	local copy = self:getClass():new()
+	local record = {}
+	
+	for k, v in pairs(self.attributes) do
+		if type(v) == "table" and sb2.getClassName(v) and v.copyForContext then
+			v = v:copyForContext(record)
+		end
+		copy.attributes[k] = v
+	end
+	
 	return copy
 end
 
