@@ -105,8 +105,11 @@ sb2.registerScriptblock("scriptblocks2:invoke_continuation", {
 		end
 		
 		local continuation = frame:getArg("continuation")
-		if type(continuation) ~= "table" or not continuation.invokeContinuation then process:unwind(); return process:receiveArg(frame:getArg(1)) end
+		if type(continuation) ~= "table" or not continuation.invokeContinuation then process:pop(); process:unwind(); return process:receiveArg(frame:getArg(1)) end
 		
+		-- Remove our frame before invoking the continuation.
+		-- (If we're escaping a coroutine, resuming it should not automatically re-invoke the continuation.)
+		process:pop()
 		return continuation:invokeContinuation(process, frame:getArg(1))
 	end
 })

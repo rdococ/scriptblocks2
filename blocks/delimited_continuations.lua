@@ -62,8 +62,8 @@ function sb2.DelimitedContinuation:doCall(process, context, arg)
 	-- Push a delimiter frame here.
 	process:push(sb2.DelimiterFrame:new(self.tag))
 	
-	frame:receiveArg(arg)
 	process:rewind(frame)
+	return frame:receiveArg(arg)
 end
 
 function sb2.DelimitedContinuation:recordString(record)
@@ -158,13 +158,14 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		
 		local tag = frame:getArg("tag")
 		
+		-- Remove this frame so we aren't in the captured slice.
+		process:pop()
 		-- Unwind the stack until we find the continuation delimiter.
-		-- The captured slice includes this frame. Remove it, it's unnecessary.
-		local slice = process:unwind(function (f) return f.getDelimiterTag and f:getDelimiterTag() == tag end):getParent()
+		local slice = process:unwind(function (f) return f.getDelimiterTag and f:getDelimiterTag() == tag end)
 		
 		if process:getFrame() then
 			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.
-			-- We're about to call the 'shift' closure. Within it, the 'reset' should no longer be active.
+			-- We're about to call the 'shift0' closure. Within it, the 'reset0' should no longer be active.
 			process:pop()
 		end
 		return closure:doCall(process, context, sb2.DelimitedContinuation:new(slice, tag))

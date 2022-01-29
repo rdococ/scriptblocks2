@@ -78,9 +78,8 @@ function sb2.CoroutineDelimiterFrame:getDelimiteeCoroutine()
 end
 
 function sb2.CoroutineDelimiterFrame:unwound(slice, data)
-	-- If another coroutine has already been unwound, cap our slice so we don't resume any of their frames.
-	-- TODO: We could create a new CoroutineResumeFrame to resume the coroutine we've been forced out of
-	self.coroutine:forceYield(data.coroutineFrame and data.coroutineFrame:getParent() or slice)
+	-- If another coroutine has already been unwound, cap our slice so we don't resume any of their frames
+	self.coroutine:forceYield(data.coroutineFrame and data.coroutineFrame:getParent() or slice, data.coroutineFrame and data.coroutineFrame:getDelimiteeCoroutine() or nil)
 	data.coroutineFrame = self
 end
 function sb2.CoroutineDelimiterFrame:rewound(process)
@@ -96,12 +95,17 @@ end
 sb2.Coroutine = sb2.registerClass("coroutine")
 
 function sb2.Coroutine:initialize(frame)
+	-- Remember this coroutine's saved top frame.
 	self.frame = frame
-	self.process = setmetatable({}, {__mode = "k"})
+	-- Remember if this coroutine is running, and what process it's running in.
+	self.process = nil
+	-- Remember if this coroutine has finished.
 	self.finished = false
+	-- If some external force forces us to yield, remember which coroutine we were in.
+	self.resumeNext = nil
 end
 function sb2.Coroutine:copy()
-	if self.process[1] and not self.process[1]:isHalted() then return end
+	if self.process and not self.process:isHalted() then return end
 	
 	local copy = self:getClass():new(self.frame and self.frame:copy())
 	copy.finished = self.finished
@@ -110,12 +114,16 @@ function sb2.Coroutine:copy()
 end
 
 function sb2.Coroutine:doResume(process, arg)
-	if self.process[1] and not self.process[1]:isHalted() or self.finished then return process:receiveArg(nil) end
-	self.process[1] = process
+	if self.process and not self.process:isHalted() or self.finished then return process:receiveArg(nil) end
+	self.process = process
 	
 	process:push(sb2.CoroutineDelimiterFrame:new(self))
-	
 	process:rewind(self.frame)
+	
+	if self.resumeNext then
+		return self.resumeNext:doResume(process, nil)
+	end
+	
 	return process:receiveArg(arg)
 end
 function sb2.Coroutine:doCall(process, context, arg)
@@ -123,15 +131,15 @@ function sb2.Coroutine:doCall(process, context, arg)
 end
 
 function sb2.Coroutine:doYield(process, value, data)
-	if process ~= self.process[1] then return end
+	if process ~= self.process then return end
 	
 	self.frame = data and data.coroutineFrame and data.coroutineFrame:getParent() or process:unwind(function (f) return f.getDelimiteeCoroutine and f:getDelimiteeCoroutine() == self end)
-	self.process[1] = nil
+	self.process = nil
 	
 	return process:report(value)
 end
 function sb2.Coroutine:getState()
-	if self.process[1] and not self.process[1]:isHalted() then
+	if self.process and not self.process:isHalted() then
 		return "running"
 	elseif not self.finished then
 		return "paused"
@@ -140,19 +148,21 @@ function sb2.Coroutine:getState()
 	end
 end
 
-function sb2.Coroutine:forceYield(slice)
-	self.frame = slice:copy()
-	self.process[1] = nil
+function sb2.Coroutine:forceYield(slice, resumeNext)
+	-- This coroutine has been forced to yield. Take a copy of our slice and remember to resume the coroutine we were just in if we get resumed.
+	self.frame = slice and slice:copy()
+	self.process = nil
+	self.resumeNext = resumeNext
 end
 function sb2.Coroutine:forceResume(process)
 	-- If this coroutine is already running, you can't rewind into it!
-	if self.process[1] then return true end
-	self.process[1] = process
+	if self.process then return true end
+	self.process = process
 end
 
 function sb2.Coroutine:hasFinished()
 	self.frame = nil
-	self.process[1] = nil
+	self.process = nil
 	self.finished = true
 end
 
