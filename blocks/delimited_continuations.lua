@@ -1,39 +1,39 @@
 sb2.colors.delimitedContinuations = "#cafcab"
 
 --[[
-DelimiterFrame
+PromptFrame
 
-This is a custom frame type that represents a continuation delimiter. It is created by the 'Call With Continuation Prompt' block, and used by 'Call With Delimited Continuation' to capture a continuation up to this frame.
+This is a custom frame type that represents a continuation prompt. It is created by the 'Call With Continuation Prompt' block, and used by 'Call With Delimited Continuation' to capture a continuation up to this frame.
 ]]
 
-sb2.DelimiterFrame = sb2.registerClass("delimiterFrame")
+sb2.PromptFrame = sb2.registerClass("promptFrame")
 
-function sb2.DelimiterFrame:initialize(tag)
+function sb2.PromptFrame:initialize(tag)
 	self.tag = tag
 	
 	self.parent = nil
 	self.arg = nil
 end
 
-function sb2.DelimiterFrame:copy()
+function sb2.PromptFrame:copy()
 	local newFrame = self:getClass():new()
 	newFrame.parent = self.parent and self.parent:copy()
 end
-function sb2.DelimiterFrame:step(process)
+function sb2.PromptFrame:step(process)
 	return process:report(self.arg)
 end
-function sb2.DelimiterFrame:receiveArg(arg)
+function sb2.PromptFrame:receiveArg(arg)
 	self.arg = arg
 end
 
-function sb2.DelimiterFrame:getParent()
+function sb2.PromptFrame:getParent()
 	return self.parent
 end
-function sb2.DelimiterFrame:setParent(parent)
+function sb2.PromptFrame:setParent(parent)
 	self.parent = parent
 end
 
-function sb2.DelimiterFrame:getDelimiterTag()
+function sb2.PromptFrame:getPromptTag()
 	return self.tag
 end
 
@@ -60,7 +60,7 @@ function sb2.DelimitedContinuation:doCall(process, context, arg)
 	if not frame then return process:receiveArg(arg) end
 	
 	-- Push a delimiter frame here.
-	process:push(sb2.DelimiterFrame:new(self.tag))
+	process:push(sb2.PromptFrame:new(self.tag))
 	
 	process:rewind(frame)
 	return frame:receiveArg(arg)
@@ -112,7 +112,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_continuation_delimiter", {
 		
 		-- Replace this frame with a delimiter, and call the closure.
 		process:pop()
-		process:push(sb2.DelimiterFrame:new(frame:getArg("tag")))
+		process:push(sb2.PromptFrame:new(frame:getArg("tag")))
 		
 		return closure:doCall(process, context, nil)
 	end
@@ -161,7 +161,7 @@ sb2.registerScriptblock("scriptblocks2:call_with_delimited_continuation", {
 		-- Remove this frame so we aren't in the captured slice.
 		process:pop()
 		-- Unwind the stack until we find the continuation delimiter.
-		local slice = process:unwind(function (f) return f.getDelimiterTag and f:getDelimiterTag() == tag end)
+		local slice = process:unwind(function (f) return f.getPromptTag and f:getPromptTag() == tag end)
 		
 		if process:getFrame() then
 			-- Process:unwind does not capture the delimiter frame itself. It's our job to decide what to do with it.

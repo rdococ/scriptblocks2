@@ -42,51 +42,51 @@ function sb2.CoroutineStartFrame:recordString(record)
 end
 
 
-sb2.CoroutineDelimiterFrame = sb2.registerClass("coroutineDelimiterFrame")
+sb2.CoroutineBaseFrame = sb2.registerClass("coroutineBaseFrame")
 
-function sb2.CoroutineDelimiterFrame:initialize(coro)
+function sb2.CoroutineBaseFrame:initialize(coro)
 	self.coroutine = coro
 	
 	self.parent = nil
 	self.arg = nil
 end
 
-function sb2.CoroutineDelimiterFrame:copy()
+function sb2.CoroutineBaseFrame:copy()
 	local newFrame = self:getClass():new()
 	newFrame.coroutine = self.coroutine
 	newFrame.parent = self.parent and self.parent:copy()
 	
 	return newFrame
 end
-function sb2.CoroutineDelimiterFrame:step(process)
+function sb2.CoroutineBaseFrame:step(process)
 	self.coroutine:hasFinished()
 	return process:report(self.arg)
 end
-function sb2.CoroutineDelimiterFrame:receiveArg(arg)
+function sb2.CoroutineBaseFrame:receiveArg(arg)
 	self.arg = arg
 end
 
-function sb2.CoroutineDelimiterFrame:getParent()
+function sb2.CoroutineBaseFrame:getParent()
 	return self.parent
 end
-function sb2.CoroutineDelimiterFrame:setParent(parent)
+function sb2.CoroutineBaseFrame:setParent(parent)
 	self.parent = parent
 end
 
-function sb2.CoroutineDelimiterFrame:getDelimiteeCoroutine()
+function sb2.CoroutineBaseFrame:getBaseFrameCoroutine()
 	return self.coroutine
 end
 
-function sb2.CoroutineDelimiterFrame:unwound(slice, data)
+function sb2.CoroutineBaseFrame:unwound(slice, data)
 	-- If another coroutine has already been unwound, cap our slice so we don't resume any of their frames
-	self.coroutine:forceYield(data.coroutineFrame and data.coroutineFrame:getParent() or slice, data.coroutineFrame and data.coroutineFrame:getDelimiteeCoroutine() or nil)
+	self.coroutine:forceYield(data.coroutineFrame and data.coroutineFrame:getParent() or slice, data.coroutineFrame and data.coroutineFrame:getBaseFrameCoroutine() or nil)
 	data.coroutineFrame = self
 end
-function sb2.CoroutineDelimiterFrame:rewound(process)
+function sb2.CoroutineBaseFrame:rewound(process)
 	return self.coroutine:forceResume(process)
 end
 
-function sb2.CoroutineDelimiterFrame:recordString(record)
+function sb2.CoroutineBaseFrame:recordString(record)
 	record[self] = true
 	return string.format("<coroutine delimiter frame %s -> %s", sb2.toString(self.coroutine, record), sb2.toString(self.parent, record))
 end
@@ -117,7 +117,7 @@ function sb2.Coroutine:doResume(process, arg)
 	if self.process and not self.process:isHalted() or self.finished then return process:receiveArg(nil) end
 	self.process = process
 	
-	process:push(sb2.CoroutineDelimiterFrame:new(self))
+	process:push(sb2.CoroutineBaseFrame:new(self))
 	process:rewind(self.frame)
 	
 	if self.resumeNext then
@@ -133,7 +133,7 @@ end
 function sb2.Coroutine:doYield(process, value, data)
 	if process ~= self.process then return end
 	
-	self.frame = data and data.coroutineFrame and data.coroutineFrame:getParent() or process:unwind(function (f) return f.getDelimiteeCoroutine and f:getDelimiteeCoroutine() == self end)
+	self.frame = data and data.coroutineFrame and data.coroutineFrame:getParent() or process:unwind(function (f) return f.getBaseFrameCoroutine and f:getBaseFrameCoroutine() == self end)
 	self.process = nil
 	
 	return process:report(value)
@@ -314,8 +314,8 @@ sb2.registerScriptblock("scriptblocks2:call_out_of_coroutine", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		
-		local delimiter = process:find(function (f) return f.getDelimiteeCoroutine end)
-		local coro = delimiter and delimiter:getDelimiteeCoroutine()
+		local delimiter = process:find(function (f) return f.getBaseFrameCoroutine end)
+		local coro = delimiter and delimiter:getBaseFrameCoroutine()
 		
 		if type(coro) ~= "table" or not coro.doYield then
 			local value = frame:getArg("arg")
@@ -359,8 +359,8 @@ sb2.registerScriptblock("scriptblocks2:run_out_of_coroutine", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
 		end
 		if not frame:isArgEvaluated("value") then
-			local delimiter = process:find(function (f) return f.getDelimiteeCoroutine end)
-			local coro = delimiter and delimiter:getDelimiteeCoroutine()
+			local delimiter = process:find(function (f) return f.getBaseFrameCoroutine end)
+			local coro = delimiter and delimiter:getBaseFrameCoroutine()
 			
 			if type(coro) ~= "table" or not coro.doYield then
 				local value = frame:getArg("arg")
