@@ -10,13 +10,16 @@ function sb2.CoroutineStartFrame:initialize(context, closure)
 	
 	self.arg = nil
 end
-
-function sb2.CoroutineStartFrame:copy()
-	local newFrame = self:getClass():new(self.context, self.closure)
-	newFrame.parent = self.parent and self.parent:copy()
+function sb2.CoroutineStartFrame:copy(record)
+	record = record or {}
+	record[self.context] = record[self.context] or self.context:copy()
+	
+	local newFrame = self:getClass():new(record[self.context], self.closure)
+	newFrame.parent = self.parent and self.parent:copy(record)
 	
 	return newFrame
 end
+
 function sb2.CoroutineStartFrame:step(process)
 	process:pop()
 	return self.closure:doCall(process, self.context, self.arg)
@@ -50,14 +53,14 @@ function sb2.CoroutineBaseFrame:initialize(coro)
 	self.parent = nil
 	self.arg = nil
 end
-
-function sb2.CoroutineBaseFrame:copy()
+function sb2.CoroutineBaseFrame:copy(record)
 	local newFrame = self:getClass():new()
 	newFrame.coroutine = self.coroutine
-	newFrame.parent = self.parent and self.parent:copy()
+	newFrame.parent = self.parent and self.parent:copy(record)
 	
 	return newFrame
 end
+
 function sb2.CoroutineBaseFrame:step(process)
 	self.coroutine:hasFinished()
 	return process:report(self.arg)

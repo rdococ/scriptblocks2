@@ -372,8 +372,10 @@ Extensions may define their own types of frame to implement custom behaviours. W
 Basic interface:
 	These are methods that must be implemented by all types of frame.
 	
-	copy()
+	copy(record)
 		Copies this frame recursively. The resulting frame can be restored with process:continue(), acting as a continuation.
+		'record' is used recursively for any values that frames want to copy, but whose identity should be preserved among frames in the same call stack.
+		For example: Copying a call stack segment should copy its Contexts, but a Context shared between two frames should only be copied once.
 	
 	getParent()
 		Returns the frame that this frame will eventually report back to.
@@ -432,10 +434,12 @@ function sb2.Frame:initialize(pos, context)
 	self.requestedEmerge = false
 	self.emergeFailed = false
 end
-
-function sb2.Frame:copy()
-	local copy = self:getClass():new(self.pos, self.context)
-	copy.parent = self.parent and self.parent:copy()
+function sb2.Frame:copy(record)
+	record = record or {}
+	record[self.context] = record[self.context] or self.context:copy()
+	
+	local copy = self:getClass():new(self.pos, record[self.context])
+	copy.parent = self.parent and self.parent:copy(record)
 	
 	copy.selectedArg = self.selectedArg
 	
@@ -451,6 +455,7 @@ function sb2.Frame:copy()
 	
 	return copy
 end
+
 function sb2.Frame:step(process)
 	local pos = self.pos
 	local node = self:requestNode()

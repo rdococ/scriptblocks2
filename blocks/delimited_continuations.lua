@@ -14,11 +14,11 @@ function sb2.PromptFrame:initialize(tag)
 	self.parent = nil
 	self.arg = nil
 end
-
-function sb2.PromptFrame:copy()
+function sb2.PromptFrame:copy(record)
 	local newFrame = self:getClass():new()
-	newFrame.parent = self.parent and self.parent:copy()
+	newFrame.parent = self.parent and self.parent:copy(record)
 end
+
 function sb2.PromptFrame:step(process)
 	return process:report(self.arg)
 end
