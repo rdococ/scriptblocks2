@@ -202,7 +202,7 @@ sb2.registerScriptblock("scriptblocks2:create_new_coroutine", {
 		local closure = frame:getArg("closure")
 		if type(closure) ~= "table" or not closure.doCall then return process:report(nil) end
 		
-		local coro = sb2.Coroutine:new(sb2.CoroutineStartFrame:new(context, closure))
+		local coro = sb2.Coroutine:new(sb2.CoroutineStartFrame:new(context:copy(), closure))
 		return process:report(coro)
 	end
 })
