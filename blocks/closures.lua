@@ -1,7 +1,35 @@
 sb2.colors.closures = "#c1c1c1"
 
 local modStorage = (...).modStorage
-sb2.closureList = minetest.deserialize(modStorage:get_string("closures")) or minetest.deserialize(modStorage:get_string("functions")) or {}
+sb2.closureList = minetest.deserialize(modStorage:get_string("closures")) or {}
+
+local function tryToGenerateID()
+	local id
+	
+	local attempts = 0
+	while (not id or sb2.closureList[id]) and attempts <= 10000 do
+		id = sb2.generateUUID()
+		attempts = attempts + 1
+	end
+	
+	return id
+end
+
+local function createClosureData(id, pos)
+	sb2.closureList[id] = {pos = pos}
+end
+local function doesClosureDataExist(id)
+	return not not sb2.closureList[id]
+end
+local function getClosureDataPos(id)
+	return sb2.closureList[id] and sb2.closureList[id].pos
+end
+local function setClosureDataPos(id, pos)
+	sb2.closureList[id].pos = pos
+end
+local function deleteClosureData(id)
+	sb2.closureList[id] = nil
+end
 
 --[[
 Closure
@@ -34,7 +62,7 @@ function sb2.Closure:initialize(id, context)
 end
 
 function sb2.Closure:getPos()
-	return sb2.closureList[self.id] and sb2.closureList[self.id].pos
+	return getClosureDataPos(self.id)
 end
 function sb2.Closure:getContext()
 	return self.context
@@ -94,12 +122,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		if itemId ~= "" then
 			id = itemId
 			
-			if sb2.closureList[id] then
+			if doesClosureDataExist(id) then
 				if placerName then
 					minetest.chat_send_player(placerName, "This closure has already been placed. Creating a new closure.")
 				end
 				
-				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.closureList[id].pos))
+				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(getClosureDataPos(id)))
+				id = nil
 			end
 			
 			local parameter = itemMeta:get_string("parameter")
@@ -108,13 +137,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			itemstack:set_count(0)
 		end
 		
-		local attempts = 0
-		while (not id or sb2.closureList[id]) and attempts <= 10000 do
-			id = sb2.generateUUID()
-			attempts = attempts + 1
-		end
-		
-		if attempts > 10000 and sb.closures[id] then
+		id = id or tryToGenerateID()
+		if not id then
 			if placerName then
 				minetest.chat_send_player(placerName, "Failed to initialize closure.")
 				meta:set_string("owner", placerName)
@@ -134,14 +158,13 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		end
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName or "(unknown)", meta:get_string("parameter")))
-		
-		sb2.closureList[id] = {pos = pos}
+		createClosureData(id, pos)
 	end,
 	on_destruct = function (pos)
 		local id = minetest.get_meta(pos):get_string("id")
 		if id ~= "" then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
-			sb2.closureList[id] = nil
+			deleteClosureData(id)
 		end
 	end,
 	
@@ -157,14 +180,12 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		if id == "" then return end
 		
-		local funcDef = sb2.closureList[id]
-		if not funcDef then
-			funcDef = {pos = pos}
-			sb2.closureList[id] = funcDef
+		if not doesClosureDataExist(id) then
+			createClosureData(id, pos)
 		end
-		
-		if not funcDef.pos or not vector.equals(pos, funcDef.pos) then
-			funcDef.pos = pos
+		local dataPos = getClosureDataPos(id)
+		if not dataPos or not vector.equals(dataPos, pos) then
+			setClosureDataPos(id, pos)
 			
 			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
 			minetest.chat_send_player(senderName, "Updated closure position.")
@@ -204,8 +225,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			local closure = sb2.Closure:new(id, context)
 			
 			if not closure:getPos() or not vector.equals(closure:getPos(), pos) then
-				sb2.closureList[id] = sb2.closureList[id] or {}
-				sb2.closureList[id].pos = pos
+				createClosureData(id, pos)
 			end
 			
 			return process:report(closure)
@@ -299,6 +319,5 @@ minetest.register_globalstep(function (dt)
 end)
 
 minetest.register_on_shutdown(function ()
-	modStorage:set_string("functions", "")
 	modStorage:set_string("closures", minetest.serialize(sb2.closureList))
 end)
