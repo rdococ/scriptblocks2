@@ -8,6 +8,12 @@ privateSB2.modStorage = minetest.get_mod_storage()
 local settings = minetest.settings
 local enableExperiments = settings:get_bool("scriptblocks2_enable_experiments")
 
+local function loadfileWithError(file)
+	local func, err = loadfile(file)
+	if not func then error(err) end
+	return func
+end
+
 -- Utilities
 -- These are files to provide helper functions and classes, as well as a simple class mechanism.
 dofile(MP .. "/util/util.lua")
@@ -33,8 +39,8 @@ dofile(MP .. "/blocks/operators.lua")
 dofile(MP .. "/blocks/variables.lua")
 dofile(MP .. "/blocks/lists.lua")
 dofile(MP .. "/blocks/dictionaries.lua")
-loadfile(MP .. "/blocks/procedures.lua")(privateSB2)
-loadfile(MP .. "/blocks/closures.lua")(privateSB2)
+loadfileWithError(MP .. "/blocks/procedures.lua")(privateSB2)
+loadfileWithError(MP .. "/blocks/closures.lua")(privateSB2)
 dofile(MP .. "/blocks/coroutines.lua")
 if enableExperiments then
 	dofile(MP .. "/blocks/continuations.lua")
