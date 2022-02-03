@@ -1,4 +1,4 @@
-sb2.colors.coroutines = "#fce762"
+sb2.colors.coroutines = "#fcea70"
 
 sb2.CoroutineStartFrame = sb2.registerClass("coroutineStartFrame")
 

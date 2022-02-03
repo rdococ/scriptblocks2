@@ -1,4 +1,4 @@
-sb2.colors.processes = "#fceb80"
+sb2.colors.processes = "#fced8a"
 
 sb2.registerScriptblock("scriptblocks2:create_new_process", {
 	sb2_label = "Create New Process",
