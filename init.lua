@@ -43,8 +43,6 @@ loadfileWithError(MP .. "/blocks/procedures.lua")(privateSB2)
 loadfileWithError(MP .. "/blocks/closures.lua")(privateSB2)
 dofile(MP .. "/blocks/coroutines.lua")
 if enableExperiments then
-	dofile(MP .. "/blocks/continuations.lua")
-	dofile(MP .. "/blocks/delimited_continuations.lua")
 	dofile(MP .. "/blocks/processes.lua")
 	dofile(MP .. "/blocks/fun.lua")
 end

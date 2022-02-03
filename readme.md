@@ -19,6 +19,8 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 
 These features can be accessed through the 'Enable Experiments' setting. Some of these features can cause a lot of lag, even with the limits that have been imposed. Others are only useful for debugging purposes. Either way, don't enable these on a server!
 
+First-class continuations have been moved to their own mod, [SB2 Continuations](https://github.com/rdococ/sb2_continuations).
+
 ## Findings
 
 This mod began as an experiment to see what kind of fully-fledged programming language you can design using nodes. I discovered that creating a language this way has unique advantages, and leaned into them.
