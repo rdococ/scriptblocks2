@@ -84,6 +84,9 @@ Methods:
 	log(message, ...)
 		Logs a debug message to the player only if debugging is enabled.
 		Automatic formatting is applied using string.format. If one of the values is something like "{prettyprint = true, value = ...}", sb2.prettyPrint is called on it before formatting, but only if debugging is enabled.
+	
+	getMemoryUsage()
+		Returns an approximation of this process's memory usage.
 
 Static methods:
 	stopAllProcessesFor(starter)
@@ -355,6 +358,10 @@ function sb2.Process:log(message, ...)
 		
 		minetest.chat_send_player(self.starter, string.format("[Process] " .. message, unpack(values)))
 	end
+end
+
+function sb2.Process:getMemoryUsage()
+	return math.max(self.memoryUsage, self.newMemoryUsage)
 end
 
 function sb2.Process:recordString(record)

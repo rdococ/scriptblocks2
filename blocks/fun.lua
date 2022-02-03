@@ -41,7 +41,7 @@ sb2.registerScriptblock("scriptblocks2:get_memory_usage", {
 	sb2_action = sb2.simple_action {
 		arguments = {},
 		action = function (pos, node, process, frame, context)
-			return math.max(process.memoryUsage, process.newMemoryUsage)
+			return process:getMemoryUsage()
 		end
 	}
 })
