@@ -21,15 +21,6 @@ These features can be accessed through the 'Enable Experiments' setting. Some of
 
 First-class continuations have been moved to their own mod, [SB2 Continuations](https://github.com/rdococ/sb2_continuations).
 
-## Findings
-
-This mod began as an experiment to see what kind of fully-fledged programming language you can design using nodes. I discovered that creating a language this way has unique advantages, and leaned into them.
-
-* Code reuse and cooperation. You can build a procedure and reuse it in any other script in that world, even if it's part of a completely different project. Other players can even use your procedure for their own scripts. This potential for free, live cooperation between programmers is unmatched by Scratch, Snap! or any other visual programming environments.
-* Complex control flow using simple abstractions. Using a custom call stack enables the implementation of powerful control flow mechanisms such as continuations. Coroutines are simply "suspendable procedures" - but when you can make clones of them, they are as powerful as multi-shot delimited continuations (in other words, *very* powerful!).
-* Taking advantage of the medium. There is no "while" block - you can create loops by physically *looping* scriptblocks like you would a flowchart. If you want to build a recursive procedure that runs a bit of initialization code at the beginning, you can create a private procedure that 'starts' after the initialization and use that to perform recursion.
-* Supporting both imperative and functional paradigms. Reporting from a procedure is implicit, so you can build procedures in a purely functional manner. "Command" blocks are simply reporters that evaluate their next block on their last step, so you can even mix expressions with statements.
-
 ## Examples
 
 This procedure calculates the factorial of a given number.
