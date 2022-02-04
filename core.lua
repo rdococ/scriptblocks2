@@ -81,12 +81,17 @@ Methods:
 	getHaltingReason()
 		Returns the reason this process has halted, or nil if it hasn't.
 	
-	log(message, ...)
-		Logs a debug message to the player only if debugging is enabled.
-		Automatic formatting is applied using string.format. If one of the values is something like "{prettyprint = true, value = ...}", sb2.prettyPrint is called on it before formatting, but only if debugging is enabled.
+	hasReported()
+		Returns true if this process has reported from its base stack frame.
+	getReportedValue()
+		Returns the value the process reported, or nil if it has not done so yet.
 	
 	getMemoryUsage()
 		Returns an approximation of this process's memory usage.
+	
+	log(message, ...)
+		Logs a debug message to the player only if debugging is enabled.
+		Automatic formatting is applied using string.format. If one of the values is something like "{prettyprint = true, value = ...}", sb2.prettyPrint is called on it before formatting, but only if debugging is enabled.
 
 Static methods:
 	stopAllProcessesFor(starter)
@@ -154,6 +159,9 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	self.yielding = false
 	self.halted = false
 	
+	self.reported = false
+	self.reportedValue = nil
+	
 	self:log("Started.")
 	sb2.log("action", "Process started by %s at %s", self.starter or "(unknown)", minetest.pos_to_string(frame:getPos()))
 	
@@ -190,6 +198,9 @@ function sb2.Process:receiveArg(value)
 	if self.frame then
 		return self.frame:receiveArg(value)
 	else
+		self.reported = true
+		self.reportedValue = value
+		
 		self:log("Reported: %s", {prettyprint = true, value = value})
 		if self.frame and self.frame.getPos then
 			sb2.log("action", "Process at %s reported %s", minetest.pos_to_string(self.frame:getPos()), tostring(value))
@@ -347,6 +358,17 @@ function sb2.Process:getHaltingReason()
 	return self.halted or nil
 end
 
+function sb2.Process:hasReported()
+	return self.reported
+end
+function sb2.Process:getReportedValue()
+	return self.reportedValue
+end
+
+function sb2.Process:getMemoryUsage()
+	return math.max(self.memoryUsage, self.newMemoryUsage)
+end
+
 function sb2.Process:log(message, ...)
 	if self.debugging then
 		local values = {...}
@@ -358,10 +380,6 @@ function sb2.Process:log(message, ...)
 		
 		minetest.chat_send_player(self.starter, string.format("[Process] " .. message, unpack(values)))
 	end
-end
-
-function sb2.Process:getMemoryUsage()
-	return math.max(self.memoryUsage, self.newMemoryUsage)
 end
 
 function sb2.Process:recordString(record)
