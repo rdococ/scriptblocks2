@@ -10,7 +10,6 @@ scriptblocks2_max_memory (Maximum memory usage per process) int 100000 10000 100
 scriptblocks2_max_processes (Maximum processes per player) int 500 100 10000
 
 # If enabled, adds blocks for:
-# - Deprecated features (such as continuations)
 # - On-the-fly process creation
 # - Introspection (e.g. getting current call stack length)
 # These features are experimental, and enable e.g. fork bombs to be created.
