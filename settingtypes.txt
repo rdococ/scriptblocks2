@@ -9,9 +9,9 @@ scriptblocks2_max_memory (Maximum memory usage per process) int 100000 10000 100
 # The maximum number of processes one player can have.
 scriptblocks2_max_processes (Maximum processes per player) int 500 100 10000
 
-# If enabled, adds blocks for:
-# - On-the-fly process creation
-# - Introspection (e.g. getting current call stack length)
-# These features are experimental, and enable e.g. fork bombs to be created.
-# Only use in singleplayer, or if you *really* trust your players!
+# If enabled, adds blocks for features in testing:
+# - First-class processes (i.e. parallelism primitives)
+# - Introspective primitives (e.g. "get memory usage")
+# These features are experimental, but may be added in the future.
+# Only use in singleplayer or on private servers, as they can lag the server!
 scriptblocks2_enable_experiments (Enable experimental features) bool false
