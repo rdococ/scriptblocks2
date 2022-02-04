@@ -86,6 +86,9 @@ Methods:
 	getReportedValue()
 		Returns the value the process reported, or nil if it has not done so yet.
 	
+	getState()
+		Returns "running" or "finished" depending on whether the process has halted or not.
+	
 	getMemoryUsage()
 		Returns an approximation of this process's memory usage.
 	
@@ -363,6 +366,13 @@ function sb2.Process:hasReported()
 end
 function sb2.Process:getReportedValue()
 	return self.reportedValue
+end
+
+function sb2.Process:getState()
+	if self.halted then
+		return "finished"
+	end
+	return "running"
 end
 
 function sb2.Process:getMemoryUsage()
