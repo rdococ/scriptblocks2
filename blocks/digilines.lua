@@ -13,6 +13,7 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 		},
 		additionalPoints = {
 			"The content of the message is available in a variable called 'message'.",
+			"If the channel is left empty, all messages will start the script!",
 		},
 	},
 	
@@ -58,9 +59,10 @@ sb2.registerScriptblock("scriptblocks2:receive_digiline_message", {
 				local setchan = meta:get_string("channel")
 				local owner = meta:get_string("owner")
 				
-				if channel == setchan then
+				if setchan == "" or channel == setchan then
 					local context = sb2.Context:new(pos, owner)
 					context:declareVar("message", sb2.toSB2Value(message))
+					context:declareVar("channel", channel)
 					
 					sb2.Process:new(sb2.Frame:new(pos, context), pos, owner)
 				end
