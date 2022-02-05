@@ -112,7 +112,7 @@ sb2.Process = sb2.registerClass("process")
 sb2.Process.processList = {}
 sb2.Process.starterInfo = {}
 
-sb2.Process.shouldNotScan = function (x) return x.isProcess and x:isProcess() and not x:isHalted() end
+sb2.Process.shouldNotScan = function (x) return x.shouldNotBeScanned and x:shouldNotBeScanned() and not x:isHalted() end
 
 function sb2.Process:stopAllProcessesFor(starter)
 	local n = 0
@@ -171,7 +171,7 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 	table.insert(sb2.Process.processList, self)
 end
 
-function sb2.Process:isProcess()
+function sb2.Process:shouldNotBeScanned()
 	return true
 end
 
