@@ -172,7 +172,7 @@ function sb2.Process:initialize(frame, head, starter, debugging)
 end
 
 function sb2.Process:shouldNotBeScanned()
-	return true
+	return not self:isHalted()
 end
 
 function sb2.Process:getStarter()
