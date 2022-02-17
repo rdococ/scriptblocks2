@@ -25,6 +25,8 @@ Methods:
 		Updates this closure body's definition according to the given fields.
 	delete()
 		Deletes this closure body.
+	isDefined()
+		Returns true if this closure body still exists (hasn't been deleted).
 ]]
 
 sb2.ClosureBody = sb2.registerClass("closureBody")
@@ -80,6 +82,9 @@ end
 function sb2.ClosureBody:delete()
 	bodyDataList[self.name] = nil
 end
+function sb2.ClosureBody:isDefined()
+	return not not bodyDataList[self.name]
+end
 
 function sb2.ClosureBody:recordString(record)
 	return string.format("<closure body %s>", self.name)
@@ -120,8 +125,8 @@ function sb2.Closure:getContext()
 end
 
 function sb2.Closure:doCall(process, context, arg)
+	if not self.body:isDefined() then return process:receiveArg(nil) end
 	local pos = self.body:getPos()
-	if not pos then return process:continue(process:getFrame(), nil) end
 	
 	local frame = sb2.Frame:new(pos, context)
 	

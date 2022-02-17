@@ -25,6 +25,8 @@ Methods:
 		Updates this procedure's definition according to the given fields.
 	delete()
 		Deletes this procedure.
+	isDefined()
+		Returns true if this procedure still exists (hasn't been deleted.)
 	isAccessibleTo(user)
 		Returns true if this procedure can be used by the given user.
 	do2ArgCall(process, context, arg1, arg2)
@@ -61,15 +63,12 @@ function sb2.Procedure:new(name, pos, owner, public)
 	return inst
 end
 function sb2.Procedure:getPos()
-	if not self.name then return end
 	return procDataList[self.name].pos
 end
 function sb2.Procedure:getOwner()
-	if not self.name then return end
 	return procDataList[self.name].owner
 end
 function sb2.Procedure:isPublic()
-	if not self.name then return end
 	return procDataList[self.name].public
 end
 function sb2.Procedure:update(pos, owner, public)
@@ -83,15 +82,18 @@ end
 function sb2.Procedure:delete()
 	procDataList[self.name] = nil
 end
+function sb2.Procedure:isDefined()
+	return not not procDataList[self.name]
+end
 function sb2.Procedure:isAccessibleTo(user)
 	if not self.name then return false end
 	return self:getOwner() == user or self:isPublic()
 end
 
 function sb2.Procedure:do2ArgCall(process, context, arg1, arg2)
-	local pos = self:getPos()
-	if not pos then return process:receiveArg(nil) end
+	if not self:isDefined() then return process:receiveArg(nil) end
 	
+	local pos = self:getPos()
 	local frame = sb2.Frame:new(pos, context)
 	
 	frame:setArg("call", self)
