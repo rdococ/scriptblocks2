@@ -81,6 +81,9 @@ function sb2.ClosureBody:delete()
 	bodyDataList[self.name] = nil
 end
 
+function sb2.ClosureBody:recordString(record)
+	return string.format("<closure body %s>", self.name)
+end
 function sb2.ClosureBody:__eq(other)
 	return self.name == other.name
 end
