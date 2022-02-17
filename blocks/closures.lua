@@ -239,6 +239,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local id = oldMeta.id or ""
 		local parameter = oldMeta.parameter or ""
 		
+		if id == "" then return end
+		
 		itemMeta:set_string("id", id)
 		itemMeta:set_string("parameter", parameter)
 		itemMeta:set_string("description", string.format("Create Closure Scriptblock %s(%s)", id:sub(1, 8), parameter))
