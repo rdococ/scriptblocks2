@@ -106,6 +106,9 @@ end
 function sb2.Procedure:recordString(record)
 	return string.format("<procedure %q>", self.name)
 end
+function sb2.Procedure:__eq(other)
+	return self.name == other.name
+end
 
 local function generateDefProcFormspec(pos, proc)
 	local meta = minetest.get_meta(pos)

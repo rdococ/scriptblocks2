@@ -69,7 +69,6 @@ function sb2.ClosureBody:newNamed(name, pos)
 	
 	return inst
 end
-
 function sb2.ClosureBody:getName()
 	return self.name
 end
@@ -82,6 +81,10 @@ function sb2.ClosureBody:update(pos)
 end
 function sb2.ClosureBody:delete()
 	bodyDataList[self.name] = nil
+end
+
+function sb2.ClosureBody:__eq(other)
+	return self.name == other.name
 end
 
 --[[
