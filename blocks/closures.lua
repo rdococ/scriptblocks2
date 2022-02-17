@@ -23,8 +23,6 @@ Methods:
 		Returns the name of this ClosureBody.
 	getPos()
 		Returns the position where this closure body is defined.
-	getOwner()
-		Returns the player that built this closure body.
 	update(pos)
 		Updates this closure body's definition according to the given fields.
 	delete()
