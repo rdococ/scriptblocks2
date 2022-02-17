@@ -5,7 +5,7 @@ sb2.colors.procedures = "#f070a0"
 --[[
 Procedure
 
-Instances of this class are references to named, user-defined procedures. This class is serializable.
+Instances of this class are references to named, user-defined procedures. An extension could allow access to Procedure values from user scripts for introspective purposes, or object-orientation (imagine constructing a procedure name from a dictionary's "class" entry and a method name).
 
 Constructors:
 	fromName(name)

@@ -5,7 +5,7 @@ sb2.colors.closures = "#c1c1c1"
 --[[
 ClosureBody
 
-Instances of this class are references to named, user-defined closure bodies. This class is serializable. An extension could allow users to construct Closure instances manually by combining ClosureBody instances with user-created Context instances - something equivalent to Lua's "setfenv".
+Instances of this class are references to named, user-defined closure bodies. An extension could allow users to construct Closure instances manually by combining ClosureBody instances with user-created Context instances - something equivalent to Lua's "setfenv".
 
 Constructors:
 	fromName(name)
