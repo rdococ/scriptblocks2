@@ -129,7 +129,8 @@ function sb2.toNumber(value, default)
 	return value:toNumber() or default
 end
 function sb2.toLuaValue(value, record)
-	if type(value) ~= "table" or not value.recordLuaValue then return value end
+	if type(value) ~= "table" or not sb2.getClassName(value) then return value end
+	if not value.recordLuaValue then return end
 	if record and record[value] then return record[value] end
 	return value:recordLuaValue(record or {})
 end
