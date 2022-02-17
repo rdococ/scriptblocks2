@@ -5,6 +5,31 @@ sb2.procedureData = {}
 local modStorage = (...).modStorage
 sb2.procedureData.list = minetest.deserialize(modStorage:get_string("procedures")) or {}
 
+function sb2.procedureData.update(name, pos, owner, public)
+	sb2.procedureData.list[name] = {pos = pos, owner = owner, public = public}
+end
+function sb2.procedureData.exists(name)
+	return not not sb2.procedureData.list[name]
+end
+function sb2.procedureData.getPos(name)
+	return sb2.procedureData.list[name] and sb2.procedureData.list[name].pos
+end
+function sb2.procedureData.getOwner(name)
+	return sb2.procedureData.list[name] and sb2.procedureData.list[name].owner
+end
+function sb2.procedureData.getPublic(name)
+	return sb2.procedureData.list[name] and sb2.procedureData.list[name].public
+end
+function sb2.procedureData.delete(name)
+	sb2.procedureData.list[name] = nil
+end
+function sb2.procedureData.canAccess(procedure, user)
+	local procedureDef = sb2.procedureData.list[procedure]
+	if not procedureDef then return false end
+	
+	return user == procedureDef.owner or procedureDef.public
+end
+
 local function generateDefProcFormspec(pos)
 	local meta = minetest.get_meta(pos)
 	meta:set_string("formspec", [[
@@ -103,29 +128,11 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		if minetest.is_protected(pos, senderName) then minetest.record_protection_violation(pos, senderName); return end
 		
 		local meta = minetest.get_meta(pos)
-		
-		local owner = meta:get_string("owner")
+
 		local procedure = meta:get_string("procedure")
-		local procDef = sb2.procedureData.list[procedure]
+		local owner = meta:get_string("owner")
+		local public = meta:get_string("public") == "true"
 		
-		if procedure ~= "" then
-			-- If procedure is named but definition does not exist somehow (e.g. server crash), create it
-			-- After this step, code assumes that procedure name == "" OR definition exists
-			if not procDef then
-				procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
-				sb2.log("warning", "Procedure %s did not have definition somehow - creating it now")
-				sb2.procedureData.list[procedure] = procDef
-			end
-			
-			-- If procedure is named and has moved (e.g. WorldEdit), update procedure definition
-			if not vector.equals(pos, procDef.pos) then
-				procDef.pos = pos
-				sb2.log("action", "Updated procedure %s position at %s", procedure, minetest.pos_to_string(pos))
-				minetest.chat_send_player(senderName, "Updated procedure position.")
-			end
-		end
-		
-		-- If any fields are changed, update metadata, and sometimes definition if it exists
 		if fields.parameter1 then
 			meta:set_string("parameter1", fields.parameter1)
 		end
@@ -139,47 +146,32 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 				newName = owner .. ":" .. newName
 			end
 			
-			-- If new name already exists, just send a message to the user
-			-- Otherwise, change the procedure's name and move procedure definition
 			if newName ~= oldName then
-				if sb2.procedureData.list[newName] then
+				if sb2.procedureData.exists(newName) then
 					minetest.chat_send_player(senderName, "That procedure name already exists!")
 				else
-					-- If the procedure was already named, remove the old name's definition
-					-- Otherwise, the procedure has just now been named. Create a new definition
-					if oldName ~= "" then
-						sb2.procedureData.list[oldName] = nil
-					else
-						procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
-					end
+					-- Remove the old definition
+					sb2.procedureData.delete(oldName)
 					
-					-- Record definition at the new name, then update name in metadata and update variable
-					sb2.procedureData.list[newName] = procDef
-					sb2.log("action", "Renamed procedure %s to %s", oldName, newName)
+					-- Update metadata and variable
 					meta:set_string("procedure", newName)
-					
 					procedure = newName
 				end
 			end
 		end
 		if fields.public then
 			meta:set_string("public", fields.public)
+			public = fields.public == "true"
 			
-			-- If the procedure definition exists, set its publicity based on the checkbox
-			if procDef then
-				procDef.public = fields.public == "true"
-			end
-			
+			-- Updating publicity requires updating formspec
 			generateDefProcFormspec(pos)
 		end
 		
-		-- Step 3: Update infotext only if procedure has been named
+		-- At the end of the day, if the procedure has been named, update its data
 		if procedure == "" then return end
-		if procDef.owner ~= owner then
-			procDef.owner = owner
-		end
+		sb2.procedureData.update(procedure, pos, owner, public)
 		
-		meta:set_string("infotext", string.format("Owner: %s\nProcedure name: %q\nParameters: %q, %q\n%s", owner, procedure, meta:get_string("parameter1"), meta:get_string("parameter2"), meta:get_string("public") == "true" and "Public" or "Private"))
+		meta:set_string("infotext", string.format("Owner: %s\nProcedure name: %q\nParameters: %q, %q\n%s", owner, procedure, meta:get_string("parameter1"), meta:get_string("parameter2"), public and "Public" or "Private"))
 	end,
 	
 	on_destruct = function (pos)
@@ -189,15 +181,6 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		end
 	end,
 })
-
-local function findProcedure(procedure, user)
-	local procedureDef = sb2.procedureData.list[procedure]
-	if not procedureDef then return end
-	
-	if user ~= procedureDef.owner and not procedureDef.public then return end
-	
-	return procedureDef
-end
 
 sb2.registerScriptblock("scriptblocks2:run_procedure", {
 	sb2_label = "Run Procedure",
@@ -227,10 +210,10 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 		local meta = minetest.get_meta(pos)
 		local procedure = meta:get_string("procedure")
 		
-		local procedureDef = findProcedure(procedure, context:getOwner())
-		if not procedureDef then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+		local canAccess = sb2.procedureData.canAccess(procedure, context:getOwner())
+		if not canAccess then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
 		
-		local procPos = procedureDef.pos
+		local procPos = sb2.procedureData.getPos(procedure)
 		
 		if not frame:isArgEvaluated(1) then
 			frame:selectArg(1)
@@ -283,10 +266,10 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 		local meta = minetest.get_meta(pos)
 		local procedure = meta:get_string("procedure")
 		
-		local proc = findProcedure(procedure, context:getOwner())
-		if not proc then return process:report(nil) end
+		local canAccess = sb2.procedureData.canAccess(procedure, context:getOwner())
+		if not canAccess then return process:report(nil) end
 		
-		local procPos = proc.pos
+		local procPos = sb2.procedureData.getPos(procedure)
 		
 		if not frame:isArgEvaluated(1) then
 			frame:selectArg(1)
