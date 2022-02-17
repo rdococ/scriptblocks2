@@ -1,7 +1,9 @@
 sb2.colors.procedures = "#f070a0"
 
+sb2.procedureData = {}
+
 local modStorage = (...).modStorage
-sb2.procedureList = minetest.deserialize(modStorage:get_string("procedures")) or {}
+sb2.procedureData.list = minetest.deserialize(modStorage:get_string("procedures")) or {}
 
 local function generateDefProcFormspec(pos)
 	local meta = minetest.get_meta(pos)
@@ -104,7 +106,7 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		
 		local owner = meta:get_string("owner")
 		local procedure = meta:get_string("procedure")
-		local procDef = sb2.procedureList[procedure]
+		local procDef = sb2.procedureData.list[procedure]
 		
 		if procedure ~= "" then
 			-- If procedure is named but definition does not exist somehow (e.g. server crash), create it
@@ -112,7 +114,7 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 			if not procDef then
 				procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
 				sb2.log("warning", "Procedure %s did not have definition somehow - creating it now")
-				sb2.procedureList[procedure] = procDef
+				sb2.procedureData.list[procedure] = procDef
 			end
 			
 			-- If procedure is named and has moved (e.g. WorldEdit), update procedure definition
@@ -140,19 +142,19 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 			-- If new name already exists, just send a message to the user
 			-- Otherwise, change the procedure's name and move procedure definition
 			if newName ~= oldName then
-				if sb2.procedureList[newName] then
+				if sb2.procedureData.list[newName] then
 					minetest.chat_send_player(senderName, "That procedure name already exists!")
 				else
 					-- If the procedure was already named, remove the old name's definition
 					-- Otherwise, the procedure has just now been named. Create a new definition
 					if oldName ~= "" then
-						sb2.procedureList[oldName] = nil
+						sb2.procedureData.list[oldName] = nil
 					else
 						procDef = {pos = pos, owner = owner, public = meta:get_string("public") == "true"}
 					end
 					
 					-- Record definition at the new name, then update name in metadata and update variable
-					sb2.procedureList[newName] = procDef
+					sb2.procedureData.list[newName] = procDef
 					sb2.log("action", "Renamed procedure %s to %s", oldName, newName)
 					meta:set_string("procedure", newName)
 					
@@ -183,13 +185,13 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 	on_destruct = function (pos)
 		local procedure = minetest.get_meta(pos):get_string("procedure")
 		if procedure ~= "" then
-			sb2.procedureList[procedure] = nil
+			sb2.procedureData.list[procedure] = nil
 		end
 	end,
 })
 
 local function findProcedure(procedure, user)
-	local procedureDef = sb2.procedureList[procedure]
+	local procedureDef = sb2.procedureData.list[procedure]
 	if not procedureDef then return end
 	
 	if user ~= procedureDef.owner and not procedureDef.public then return end
@@ -311,11 +313,11 @@ minetest.register_globalstep(function (dt)
 	t = t + dt
 	
 	if t > 60 then
-		modStorage:set_string("procedures", minetest.serialize(sb2.procedureList))
+		modStorage:set_string("procedures", minetest.serialize(sb2.procedureData.list))
 		t = 0
 	end
 end)
 
 minetest.register_on_shutdown(function ()
-	modStorage:set_string("procedures", minetest.serialize(sb2.procedureList))
+	modStorage:set_string("procedures", minetest.serialize(sb2.procedureData.list))
 end)
