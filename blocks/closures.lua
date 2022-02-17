@@ -17,7 +17,7 @@ local function tryToGenerateID()
 	return id
 end
 
-function sb2.closureData.create(id, pos)
+function sb2.closureData.update(id, pos)
 	sb2.closureData.list[id] = {pos = pos}
 end
 function sb2.closureData.exists(id)
@@ -25,9 +25,6 @@ function sb2.closureData.exists(id)
 end
 function sb2.closureData.getPos(id)
 	return sb2.closureData.list[id] and sb2.closureData.list[id].pos
-end
-function sb2.closureData.setPos(id, pos)
-	sb2.closureData.list[id].pos = pos
 end
 function sb2.closureData.delete(id)
 	sb2.closureData.list[id] = nil
@@ -160,7 +157,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		end
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName or "(unknown)", meta:get_string("parameter")))
-		sb2.closureData.create(id, pos)
+		sb2.closureData.update(id, pos)
 	end,
 	on_destruct = function (pos)
 		local id = minetest.get_meta(pos):get_string("id")
@@ -181,18 +178,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local id = meta:get_string("id")
 		
 		if id == "" then return end
-		
-		if not sb2.closureData.exists(id) then
-			sb2.closureData.create(id, pos)
-		end
-		
-		local dataPos = sb2.closureData.getPos(id)
-		if not dataPos or not vector.equals(dataPos, pos) then
-			sb2.closureData.setPos(id, pos)
-			
-			sb2.log("action", "Updated closure %s position at %s", id, minetest.pos_to_string(pos))
-			minetest.chat_send_player(senderName, "Updated closure position.")
-		end
+		sb2.closureData.update(id, pos)
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", meta:get_string("owner"), meta:get_string("parameter")))
 	end,
@@ -225,9 +211,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
 		else
 			local id = meta:get_string("id")
-			if not sb2.closureData.exists(id) or not vector.equals(sb2.closureData.getPos(id), pos) then
-				sb2.closureData.create(id, pos)
-			end
+			sb2.closureData.update(id, pos)
 			
 			local closure = sb2.Closure:new(id, context)
 			return process:report(closure)
