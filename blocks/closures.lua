@@ -254,9 +254,11 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
 		else
 			local id = meta:get_string("id")
+			if id == "" then return process:report(nil) end
+			
 			body = sb2.ClosureBody:fromName(id)
 			
-			if not body then return process:report(nil) end
+			if not body then body = sb2.ClosureBody:newNamed(id, pos) end
 			body:update(pos)
 			
 			local closure = sb2.Closure:new(body, context)
