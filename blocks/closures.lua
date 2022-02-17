@@ -5,7 +5,7 @@ sb2.closureData = {}
 local modStorage = (...).modStorage
 sb2.closureData.list = minetest.deserialize(modStorage:get_string("closures")) or {}
 
-function sb2.closureData.generateID()
+function sb2.closureData.newId()
 	local id
 	
 	local attempts = 0
@@ -135,7 +135,7 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			itemstack:set_count(0)
 		end
 		
-		id = id or sb2.closureData.generateID()
+		id = id or sb2.closureData.newId()
 		if not id then
 			if placerName then
 				minetest.chat_send_player(placerName, "Failed to initialize closure.")
