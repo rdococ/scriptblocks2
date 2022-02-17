@@ -1,44 +1,125 @@
+local modStorage = (...).modStorage
+
 sb2.colors.procedures = "#f070a0"
 
-sb2.procedureData = {}
+--[[
+Procedure
 
-local modStorage = (...).modStorage
-sb2.procedureData.list = minetest.deserialize(modStorage:get_string("procedures")) or {}
+Instances of this class are references to named, user-defined procedures. This class is serializable.
 
-function sb2.procedureData.update(name, pos, owner, public)
-	sb2.procedureData.list[name] = {pos = pos, owner = owner, public = public}
-end
-function sb2.procedureData.exists(name)
-	return not not sb2.procedureData.list[name]
-end
-function sb2.procedureData.getPos(name)
-	return sb2.procedureData.list[name] and sb2.procedureData.list[name].pos
-end
-function sb2.procedureData.getOwner(name)
-	return sb2.procedureData.list[name] and sb2.procedureData.list[name].owner
-end
-function sb2.procedureData.getPublic(name)
-	return sb2.procedureData.list[name] and sb2.procedureData.list[name].public
-end
-function sb2.procedureData.delete(name)
-	sb2.procedureData.list[name] = nil
-end
-function sb2.procedureData.canAccess(procedure, user)
-	local procedureDef = sb2.procedureData.list[procedure]
-	if not procedureDef then return false end
+Constructors:
+	fromName(name)
+		Returns the Procedure instance for the given procedure name.
+		If the procedure doesn't exist, this will return nil!
+		If a procedure instance was already constructed, this will reuse it. Deserialized procedure references may have different identities, but they will still behave correctly.
+	new(name, pos, owner, public)
+		Creates and returns an entirely new Procedure.
+		If the name already exists, this replaces that existing procedure. Procedure references will now point to the new procedure.
+
+Methods:
+	getPos()
+		Returns the position where this procedure is defined.
+	getOwner()
+		Returns the player that created this procedure.
+	isPublic()
+		Returns true if anyone can use this procedure, not just its owner.
+	update(pos, owner, public)
+		Updates this procedure's definition according to the given fields.
+	delete()
+		Deletes this procedure.
+	isAccessibleTo(user)
+		Returns true if this procedure can be used by the given user.
+	do2ArgCall(process, context, arg1, arg2)
+		Pushes a frame that will run the procedure onto the process's call stack.
+]]
+
+sb2.Procedure = sb2.registerClass("procedure")
+
+local procObjectList = {}
+local procDataList = minetest.deserialize(modStorage:get_string("procedures")) or {}
+
+function sb2.Procedure:isSerializable() return true end
+
+function sb2.Procedure:fromName(name)
+	if not procDataList[name] then return end
+	if procObjectList[name] then return procObjectList[name] end
 	
-	return user == procedureDef.owner or procedureDef.public
+	local inst = self:rawNew()
+	
+	inst.name = name
+	procObjectList[name] = inst
+	
+	return inst
+end
+function sb2.Procedure:new(name, pos, owner, public)
+	procDataList[name] = {pos = pos, owner = owner, public = public}
+	if procObjectList[name] then return procObjectList[name] end
+	
+	local inst = self:rawNew()
+	
+	inst.name = name
+	procObjectList[name] = inst
+	
+	return inst
+end
+function sb2.Procedure:getPos()
+	if not self.name then return end
+	return procDataList[self.name].pos
+end
+function sb2.Procedure:getOwner()
+	if not self.name then return end
+	return procDataList[self.name].owner
+end
+function sb2.Procedure:isPublic()
+	if not self.name then return end
+	return procDataList[self.name].public
+end
+function sb2.Procedure:update(pos, owner, public)
+	if not self.name then return end
+	
+	procDataList[self.name] = procDataList[self.name] or {}
+	procDataList[self.name].pos = pos
+	procDataList[self.name].owner = owner
+	procDataList[self.name].public = public
+end
+function sb2.Procedure:delete()
+	procDataList[self.name] = nil
+end
+function sb2.Procedure:isAccessibleTo(user)
+	if not self.name then return false end
+	return self:getOwner() == user or self:isPublic()
 end
 
-local function generateDefProcFormspec(pos)
+function sb2.Procedure:do2ArgCall(process, context, arg1, arg2)
+	local pos = self:getPos()
+	if not pos then return process:receiveArg(nil) end
+	
+	local frame = sb2.Frame:new(pos, context)
+	
+	frame:setArg("call", self)
+	frame:setArg(1, arg1)
+	frame:setArg(2, arg2)
+	
+	return process:push(frame)
+end
+
+function sb2.Procedure:recordString(record)
+	return string.format("<procedure %q>", self.name)
+end
+
+local function generateDefProcFormspec(pos, proc)
 	local meta = minetest.get_meta(pos)
+	
+	local public = true
+	if proc then public = proc:isPublic() end
+	
 	meta:set_string("formspec", [[
 		formspec_version[4]
 		size[10,7.5]
 		field[2.5,1;5,1;procedure;Name;${procedure}]
 		field[2.5,2.5;5,1;parameter1;Right Parameter;${parameter1}]
 		field[2.5,4;5,1;parameter2;Front/Left Parameter;${parameter2}]
-		checkbox[2.5,5.5;public;Allow other players to run;]] .. meta:get_string("public") .. [[]
+		checkbox[2.5,5.5;public;Allow other players to run;]] .. (public and "true" or "false") .. [[]
 		button_exit[3.5,6;3,1;proceed;Proceed]
 	]])
 end
@@ -118,7 +199,6 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		
 		meta:set_string("owner", owner)
 		meta:set_string("infotext", "Owner: " .. owner .. "\nNo procedure name set")
-		meta:set_string("public", "true")
 		
 		generateDefProcFormspec(pos)
 	end,
@@ -129,9 +209,12 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		
 		local meta = minetest.get_meta(pos)
 
-		local procedure = meta:get_string("procedure")
+		local procedureName = meta:get_string("procedure")
+		local procedure = sb2.Procedure:fromName(procedureName)
+		
 		local owner = meta:get_string("owner")
-		local public = meta:get_string("public") == "true"
+		local public = procedure and procedure:isPublic()
+		if public == nil then public = true end
 		
 		if fields.parameter1 then
 			meta:set_string("parameter1", fields.parameter1)
@@ -141,43 +224,49 @@ sb2.registerScriptblock("scriptblocks2:define_procedure", {
 		end
 		if fields.procedure then
 			-- Make sure new name follows proper naming rules
-			local oldName, newName = procedure, fields.procedure
+			local oldName, newName = procedureName, fields.procedure
 			if newName:sub(1, owner:len() + 1) ~= owner .. ":" then
 				newName = owner .. ":" .. newName
 			end
 			
 			if newName ~= oldName then
-				if sb2.procedureData.exists(newName) then
-					minetest.chat_send_player(senderName, "That procedure name already exists!")
+				local newProcedure = sb2.Procedure:fromName(newName)
+				if newProcedure then
+					minetest.chat_send_player(senderName, "That procedure already exists!")
 				else
-					-- Remove the old definition
-					sb2.procedureData.delete(oldName)
+					-- Delete the old procedure if it existed
+					if procedure then
+						procedure:delete()
+					end
 					
-					-- Update metadata and variable
+					-- Update metadata
 					meta:set_string("procedure", newName)
-					procedure = newName
+					
+					-- Update variables
+					procedureName = newName
+					procedure = sb2.Procedure:new(procedureName, pos, owner, public)
+					
+					sb2.log("action", "%s names a procedure %s at %s", owner, procedureName, minetest.pos_to_string(pos))
 				end
 			end
 		end
 		if fields.public then
-			meta:set_string("public", fields.public)
 			public = fields.public == "true"
-			
-			-- Updating publicity requires updating formspec
-			generateDefProcFormspec(pos)
 		end
 		
-		-- At the end of the day, if the procedure has been named, update its data
-		if procedure == "" then return end
-		sb2.procedureData.update(procedure, pos, owner, public)
+		-- At the end of the day, if the procedure exists, update its data
+		if not procedure then return end
+		procedure:update(pos, owner, public)
+		generateDefProcFormspec(pos, procedure)
 		
-		meta:set_string("infotext", string.format("Owner: %s\nProcedure name: %q\nParameters: %q, %q\n%s", owner, procedure, meta:get_string("parameter1"), meta:get_string("parameter2"), public and "Public" or "Private"))
+		meta:set_string("infotext", string.format("Owner: %s\nProcedure name: %q\nParameters: %q, %q\n%s", owner, procedureName, meta:get_string("parameter1"), meta:get_string("parameter2"), public and "Public" or "Private"))
 	end,
 	
 	on_destruct = function (pos)
-		local procedure = minetest.get_meta(pos):get_string("procedure")
-		if procedure ~= "" then
-			sb2.procedureData.list[procedure] = nil
+		local procedureName = minetest.get_meta(pos):get_string("procedure")
+		local procedure = sb2.Procedure:fromName(procedureName)
+		if procedure then
+			procedure:delete()
 		end
 	end,
 })
@@ -207,14 +296,6 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
-		local meta = minetest.get_meta(pos)
-		local procedure = meta:get_string("procedure")
-		
-		local canAccess = sb2.procedureData.canAccess(procedure, context:getOwner())
-		if not canAccess then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
-		
-		local procPos = sb2.procedureData.getPos(procedure)
-		
 		if not frame:isArgEvaluated(1) then
 			frame:selectArg(1)
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
@@ -223,16 +304,16 @@ sb2.registerScriptblock("scriptblocks2:run_procedure", {
 			frame:selectArg(2)
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.left), context))
 		end
+		
+		local meta = minetest.get_meta(pos)
+		local procedure = sb2.Procedure:fromName(meta:get_string("procedure"))
+		
+		local accessible = procedure and procedure:isAccessibleTo(context:getOwner())
+		if not accessible then process:pop(); return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context)) end
+		
 		if not frame:isArgEvaluated("value") then
 			frame:selectArg("value")
-			
-			local procFrame = sb2.Frame:new(procPos, context)
-			
-			procFrame:setArg("call", true)
-			procFrame:setArg(1, frame:getArg(1))
-			procFrame:setArg(2, frame:getArg(2))
-			
-			return process:push(procFrame)
+			return procedure:do2ArgCall(process, context, frame:getArg(1), frame:getArg(2))
 		end
 		
 		process:pop()
@@ -263,14 +344,6 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 	sb2_action = function (pos, node, process, frame, context)
 		local dirs = sb2.facedirToDirs(node.param2)
 		
-		local meta = minetest.get_meta(pos)
-		local procedure = meta:get_string("procedure")
-		
-		local canAccess = sb2.procedureData.canAccess(procedure, context:getOwner())
-		if not canAccess then return process:report(nil) end
-		
-		local procPos = sb2.procedureData.getPos(procedure)
-		
 		if not frame:isArgEvaluated(1) then
 			frame:selectArg(1)
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), context))
@@ -280,14 +353,14 @@ sb2.registerScriptblock("scriptblocks2:call_procedure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.front), context))
 		end
 		
-		local procFrame = sb2.Frame:new(procPos, context)
+		local meta = minetest.get_meta(pos)
+		local procedure = sb2.Procedure:fromName(meta:get_string("procedure"))
 		
-		procFrame:setArg("call", true)
-		procFrame:setArg(1, frame:getArg(1))
-		procFrame:setArg(2, frame:getArg(2))
+		local accessible = procedure and procedure:isAccessibleTo(context:getOwner())
+		if not accessible then return process:report(nil) end
 		
 		process:pop()
-		return process:push(procFrame)
+		return procedure:do2ArgCall(process, context, frame:getArg(1), frame:getArg(2))
 	end,
 })
 
@@ -296,11 +369,11 @@ minetest.register_globalstep(function (dt)
 	t = t + dt
 	
 	if t > 60 then
-		modStorage:set_string("procedures", minetest.serialize(sb2.procedureData.list))
+		modStorage:set_string("procedures", minetest.serialize(procDataList))
 		t = 0
 	end
 end)
 
 minetest.register_on_shutdown(function ()
-	modStorage:set_string("procedures", minetest.serialize(sb2.procedureData.list))
+	modStorage:set_string("procedures", minetest.serialize(procDataList))
 end)
