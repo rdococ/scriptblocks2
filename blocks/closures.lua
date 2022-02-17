@@ -5,18 +5,16 @@ sb2.colors.closures = "#c1c1c1"
 --[[
 ClosureBody
 
-Instances of this class are references to named, user-defined closure bodies. This class is serializable.
+Instances of this class are references to named, user-defined closure bodies. This class is serializable. An extension could allow users to construct Closure instances manually by combining ClosureBody instances with user-created Context instances - something equivalent to Lua's "setfenv".
 
 Constructors:
 	fromName(name)
-		Returns the ClosureBody instance for the given closure body name.
-		If the closure doesn't exist, this returns new.
-		Instances will be reused whenever possible, but this is not guaranteed.
+		Returns the ClosureBody instance for the given closure body name. If the closure doesn't exist, this will return nil!
 	new(pos)
 		Creates and returns an entirely new ClosureBody with a randomly generated name.
 	newNamed(name, pos)
 		Creates and returns a new ClosureBody with a pre-existing name.
-		If the name already exists, the existing ClosureBody is replaced.
+		If the name already exists, this replaces the existing ClosureBody. ClosureBody references and Closure instances point to the new ClosureBody.
 
 Methods:
 	getName()

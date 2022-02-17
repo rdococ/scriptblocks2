@@ -9,9 +9,7 @@ Instances of this class are references to named, user-defined procedures. This c
 
 Constructors:
 	fromName(name)
-		Returns the Procedure instance for the given procedure name.
-		If the procedure doesn't exist, this will return nil!
-		If a procedure instance was already constructed, this will reuse it. Deserialized procedure references may have different identities, but they will still behave correctly.
+		Returns the Procedure instance for the given procedure name. If the procedure doesn't exist, this will return nil!
 	new(name, pos, owner, public)
 		Creates and returns an entirely new Procedure.
 		If the name already exists, this replaces that existing procedure. Procedure references will now point to the new procedure.
