@@ -1,32 +1,96 @@
+local modStorage = (...).modStorage
+
 sb2.colors.closures = "#c1c1c1"
 
-sb2.closureData = {}
+--[[
+ClosureBody
 
-local modStorage = (...).modStorage
-sb2.closureData.list = minetest.deserialize(modStorage:get_string("closures")) or {}
+Instances of this class are references to named, user-defined closure bodies. An extension could allow users to construct Closure instances manually by combining ClosureBody instances with user-created Context instances - something equivalent to Lua's "setfenv".
 
-function sb2.closureData.newId()
-	local id
+Constructors:
+	fromName(name)
+		Returns the ClosureBody instance for the given closure body name. If the closure doesn't exist, this will return nil!
+	new(pos)
+		Creates and returns an entirely new ClosureBody with a randomly generated name.
+	newNamed(name, pos)
+		Creates and returns a new ClosureBody with a pre-existing name.
+		If the name already exists, this replaces the existing ClosureBody. ClosureBody references and Closure instances point to the new ClosureBody.
+
+Methods:
+	getName()
+		Returns the name of this ClosureBody.
+	getPos()
+		Returns the position where this closure body is defined.
+	update(pos)
+		Updates this closure body's definition according to the given fields.
+	delete()
+		Deletes this closure body.
+	isDefined()
+		Returns true if this closure body still exists (hasn't been deleted).
+]]
+
+sb2.ClosureBody = sb2.registerClass("closureBody")
+
+local bodyObjectList = {}
+local bodyDataList = minetest.deserialize(modStorage:get_string("closures")) or {}
+
+function sb2.ClosureBody:isSerializable() return true end
+
+function sb2.ClosureBody:fromName(name)
+	if not bodyDataList[name] then return end
+	if bodyObjectList[name] then return bodyObjectList[name] end
+	
+	local inst = self:rawNew()
+	
+	inst.name = name
+	bodyObjectList[name] = inst
+	
+	return inst
+end
+function sb2.ClosureBody:new(pos)
+	local name
 	
 	local attempts = 0
-	while (not id or sb2.closureData.list[id]) and attempts <= 10000 do
-		id = sb2.generateUUID()
+	while (not name or bodyDataList[name]) and attempts <= 100000 do
+		name = sb2.generateUUID()
 		attempts = attempts + 1
 	end
 	
-	return id
+	return self:newNamed(name, pos)
 end
-function sb2.closureData.update(id, pos)
-	sb2.closureData.list[id] = {pos = pos}
+function sb2.ClosureBody:newNamed(name, pos)
+	bodyDataList[name] = {pos = pos}
+	if bodyObjectList[name] then return bodyObjectList[name] end
+	
+	local inst = self:rawNew()
+	
+	inst.name = name
+	bodyObjectList[name] = inst
+	
+	return inst
 end
-function sb2.closureData.exists(id)
-	return not not sb2.closureData.list[id]
+function sb2.ClosureBody:getName()
+	return self.name
 end
-function sb2.closureData.getPos(id)
-	return sb2.closureData.list[id] and sb2.closureData.list[id].pos
+function sb2.ClosureBody:getPos()
+	return bodyDataList[self.name].pos
 end
-function sb2.closureData.delete(id)
-	sb2.closureData.list[id] = nil
+function sb2.ClosureBody:update(pos)
+	bodyDataList[self.name] = bodyDataList[self.name] or {}
+	bodyDataList[self.name].pos = pos
+end
+function sb2.ClosureBody:delete()
+	bodyDataList[self.name] = nil
+end
+function sb2.ClosureBody:isDefined()
+	return not not bodyDataList[self.name]
+end
+
+function sb2.ClosureBody:recordString(record)
+	return string.format("<closure body %s>", self.name)
+end
+function sb2.ClosureBody:__eq(other)
+	return self.name == other.name
 end
 
 --[[
@@ -35,12 +99,10 @@ Closure
 A closure is a value that represents an anonymous procedure along with an environment. Closures store their context, containing the variables they can access, and their ID, representing the definition of the anonymous procedure.
 
 Constructor:
-	new(id, context)
-		Creates a new closure with the given closure body ID and context
+	new(body, context)
+		Creates a new closure with the given closure body and context.
 
 Methods:
-	getPos()
-		Returns the position where this closure's body is defined.
 	getContext()
 		Returns the context, consisting of variables from this closure's lexical scope.
 	
@@ -54,21 +116,17 @@ sb2.Closure = sb2.registerClass("closure")
 
 function sb2.Closure:isSerializable() return true end
 
-function sb2.Closure:initialize(id, context)
-	self.id = id
+function sb2.Closure:initialize(body, context)
+	self.body = body
 	self.context = context:copy()
-end
-
-function sb2.Closure:getPos()
-	return sb2.closureData.getPos(self.id)
 end
 function sb2.Closure:getContext()
 	return self.context
 end
 
 function sb2.Closure:doCall(process, context, arg)
-	local pos = self:getPos()
-	if not pos then return process:continue(process:getFrame(), nil) end
+	if not self.body:isDefined() then return process:receiveArg(nil) end
+	local pos = self.body:getPos()
 	
 	local frame = sb2.Frame:new(pos, context)
 	
@@ -113,20 +171,20 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local placerName = placer and placer:get_player_name()
 		
 		local meta = minetest.get_meta(pos)
-		local id
+		local body
 		
 		local itemMeta = itemstack:get_meta()
 		local itemId = itemMeta:get_string("id")
 		if itemId ~= "" then
-			id = itemId
-			
-			if sb2.closureData.exists(id) then
+			local existingBody = sb2.ClosureBody:fromName(itemId)
+			if existingBody then
 				if placerName then
 					minetest.chat_send_player(placerName, "This closure has already been placed. Creating a new closure.")
 				end
 				
-				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new ID.", id, minetest.pos_to_string(pos), minetest.pos_to_string(sb2.closureData.getPos(id)))
-				id = nil
+				sb2.log("warning", "Attempted to place closure %s at %s, but it already exists at %s. Generating a new name.", itemId, minetest.pos_to_string(pos), minetest.pos_to_string(existingBody:getPos()))
+			else
+				body = sb2.ClosureBody:newNamed(itemId, pos)
 			end
 			
 			local parameter = itemMeta:get_string("parameter")
@@ -135,18 +193,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			itemstack:set_count(0)
 		end
 		
-		id = id or sb2.closureData.newId()
-		if not id then
-			if placerName then
-				minetest.chat_send_player(placerName, "Failed to initialize closure.")
-				meta:set_string("owner", placerName)
-			end
-			
-			sb2.log("error", "Failed to initialize closure at %s", minetest.pos_to_string(pos))
-			meta:set_string("infotext", "Failed to initialize")
-			
-			return
-		end
+		body = body or sb2.ClosureBody:new(pos)
+		local id = body:getName()
 		
 		sb2.log("action", "Closure %s created at %s", id, minetest.pos_to_string(pos))
 		meta:set_string("id", id)
@@ -156,13 +204,16 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		end
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", placerName or "(unknown)", meta:get_string("parameter")))
-		sb2.closureData.update(id, pos)
 	end,
 	on_destruct = function (pos)
 		local id = minetest.get_meta(pos):get_string("id")
 		if id ~= "" then
 			sb2.log("action", "Closure %s destroyed at %s", id, minetest.pos_to_string(pos))
-			sb2.closureData.delete(id)
+			
+			local body = sb2.ClosureBody:fromName(id)
+			if body then
+				body:delete()
+			end
 		end
 	end,
 	
@@ -177,7 +228,6 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		local id = meta:get_string("id")
 		
 		if id == "" then return end
-		sb2.closureData.update(id, pos)
 		
 		meta:set_string("infotext", string.format("Owner: %s\nParameter: %q", meta:get_string("owner"), meta:get_string("parameter")))
 	end,
@@ -188,6 +238,8 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 		
 		local id = oldMeta.id or ""
 		local parameter = oldMeta.parameter or ""
+		
+		if id == "" then return end
 		
 		itemMeta:set_string("id", id)
 		itemMeta:set_string("parameter", parameter)
@@ -210,9 +262,14 @@ sb2.registerScriptblock("scriptblocks2:create_closure", {
 			return process:push(sb2.Frame:new(vector.add(pos, dirs.right), funcContext))
 		else
 			local id = meta:get_string("id")
-			sb2.closureData.update(id, pos)
+			if id == "" then return process:report(nil) end
 			
-			local closure = sb2.Closure:new(id, context)
+			body = sb2.ClosureBody:fromName(id)
+			
+			if not body then body = sb2.ClosureBody:newNamed(id, pos) end
+			body:update(pos)
+			
+			local closure = sb2.Closure:new(body, context)
 			return process:report(closure)
 		end
 	end,
@@ -298,11 +355,11 @@ minetest.register_globalstep(function (dt)
 	t = t + dt
 	
 	if t > 60 then
-		modStorage:set_string("closures", minetest.serialize(sb2.closureData.list))
+		modStorage:set_string("closures", minetest.serialize(bodyDataList))
 		t = 0
 	end
 end)
 
 minetest.register_on_shutdown(function ()
-	modStorage:set_string("closures", minetest.serialize(sb2.closureData.list))
+	modStorage:set_string("closures", minetest.serialize(bodyDataList))
 end)
