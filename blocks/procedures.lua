@@ -371,7 +371,7 @@ local t = 0
 minetest.register_globalstep(function (dt)
 	t = t + dt
 	
-	if t > 60 then
+	if t > 30 then
 		modStorage:set_string("procedures", minetest.serialize(procDataList))
 		t = 0
 	end
