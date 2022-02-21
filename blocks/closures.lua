@@ -139,9 +139,6 @@ end
 function sb2.Closure:recordString(record)
 	return "<closure>"
 end
-function sb2.Closure:recordLuaValue(record)
-	return
-end
 
 sb2.registerScriptblock("scriptblocks2:create_closure", {
 	sb2_label = "Create Closure",
