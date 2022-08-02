@@ -644,7 +644,7 @@ function sb2.Context:getAttribute(varname)
 	return self.attributes[varname]
 end
 function sb2.Context:setAttribute(varname, value)
-	self.attribute[varname] = value
+	self.attributes[varname] = value
 end
 
 
