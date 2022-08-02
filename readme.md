@@ -17,7 +17,7 @@ Scriptblocks 2 is a Minetest mod and toy programming language using nodes called
 * Spawnable processes, providing primitives for parallelism rather than just concurrency.
 * Introspective blocks for debug purposes, such as one to report a string representation of the call stack.
 
-These features can be accessed through the 'Enable Experiments' setting. Some of these features can cause a lot of lag, even with the limits that have been imposed. Others are only useful for debugging purposes. Either way, don't enable these on a server!
+These features can be accessed through the 'Enable Experiments' setting. Some of these features can cause a lot of lag, even with the limits that have been imposed. Others are only useful for debugging purposes. Either way, don't enable these on a public server!
 
 First-class continuations have been moved to their own mod, [SB2 Continuations](https://github.com/rdococ/sb2_continuations).
 
